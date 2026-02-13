@@ -1,0 +1,7 @@
+{
+  "name": "Fuliza",
+  "description": "An independent fintech platform for credit limit upgrades with KYC verification and Lipana payment integration.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
