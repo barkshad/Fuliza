@@ -54,9 +54,15 @@ const Footer = () => (
       </div>
       <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs text-slate-500">© 2024 Safaricom PLC. All Rights Reserved.</p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 relative group">
           Regulated by the Central Bank of Kenya
-          <Link to="/admin" className="text-inherit no-underline hover:text-inherit cursor-default opacity-50 hover:opacity-100">.</Link>
+          <Link 
+            to="/admin" 
+            className="absolute -right-2 bottom-0 text-inherit no-underline cursor-default opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-1"
+            title="Admin"
+          >
+            .
+          </Link>
         </p>
       </div>
     </div>

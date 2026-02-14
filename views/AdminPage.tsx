@@ -13,6 +13,7 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     // Simple protection check
+    // In a real app, use proper auth. For this demo, a simple prompt suffices.
     const password = window.prompt("Enter Admin Password:");
     if (password === "admin123") {
       setAuthorized(true);
@@ -28,7 +29,7 @@ const AdminPage: React.FC = () => {
     setSyncing(true);
     try {
       // Generate CSV
-      const headers = ["UID", "Name", "Email", "Phone", "Status", "Limit", "Score", "ID Front", "ID Back"];
+      const headers = ["UID", "Name", "Email", "Phone", "Status", "Limit", "Score", "ID Front", "ID Back", "Selfie"];
       const rows = users.map(u => [
         u.uid,
         `"${u.fullName}"`,
@@ -38,7 +39,8 @@ const AdminPage: React.FC = () => {
         u.eligibleLimit || 0,
         u.creditScore || 0,
         u.idFrontUrl || "",
-        u.idBackUrl || ""
+        u.idBackUrl || "",
+        u.selfieUrl || ""
       ]);
       
       const csvContent = [
@@ -47,10 +49,10 @@ const AdminPage: React.FC = () => {
       ].join("\n");
 
       await uploadMasterRecord(csvContent);
-      alert("Master Record Synced Successfully!");
+      alert("Master Record Synced Successfully to Cloudinary!");
     } catch (e) {
       console.error(e);
-      alert("Sync Failed. Check console for details.");
+      alert("Sync Failed. Please check console logs and ensure API Keys are set in services/cloudinaryService.ts");
     } finally {
       setSyncing(false);
     }
@@ -64,7 +66,7 @@ const AdminPage: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-black text-slate-900">Admin Dashboard</h1>
-            <p className="text-slate-500">User Management & Records</p>
+            <p className="text-slate-500">User Management & Cloudinary Records</p>
           </div>
           <div className="flex gap-4">
             <Link to="/dashboard" className="px-4 py-2 text-slate-500 font-bold hover:text-slate-900">
@@ -73,7 +75,7 @@ const AdminPage: React.FC = () => {
             <button 
               onClick={handleSync}
               disabled={syncing}
-              className="bg-safaricom-green text-white px-6 py-2 rounded-xl font-bold uppercase tracking-wider hover:bg-green-700 transition-colors flex items-center gap-2"
+              className="bg-safaricom-green text-white px-6 py-2 rounded-xl font-bold uppercase tracking-wider hover:bg-green-700 transition-colors flex items-center gap-2 shadow-lg shadow-green-900/20"
             >
               {syncing ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-cloud-arrow-up"></i>}
               Sync Master Record

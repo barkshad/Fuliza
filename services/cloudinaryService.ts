@@ -1,6 +1,6 @@
 
-// Cloudinary Configuration Placeholders
-const CLOUD_NAME = "ds2mbrzcn"; // Using existing cloud name from previous code
+// Cloudinary Configuration
+const CLOUD_NAME = "ds2mbrzcn"; 
 const API_KEY = "PLACEHOLDER_API_KEY"; 
 const API_SECRET = "PLACEHOLDER_API_SECRET"; 
 
@@ -8,7 +8,7 @@ export async function uploadToCloudinary(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", "real_unsigned");
-  formData.append("folder", "user_docs"); // Added folder parameter as requested
+  formData.append("folder", "user_docs"); 
 
   try {
     const response = await fetch(
@@ -33,8 +33,10 @@ export async function uploadToCloudinary(file: File): Promise<string> {
 
 // Helper to generate SHA-1 signature for signed uploads (Browser-compatible)
 async function generateSignature(params: Record<string, string>, apiSecret: string) {
+  // Sort keys and join
   const sortedKeys = Object.keys(params).sort();
   const stringToSign = sortedKeys.map(key => `${key}=${params[key]}`).join('&') + apiSecret;
+  
   const msgBuffer = new TextEncoder().encode(stringToSign);
   const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -42,22 +44,23 @@ async function generateSignature(params: Record<string, string>, apiSecret: stri
 }
 
 export async function uploadMasterRecord(csvContent: string): Promise<string> {
-  // If API credentials are not set, warn and mock success for demo purposes
+  // If API credentials are not set (default), return a mock URL for demo purposes
   if (API_KEY === "PLACEHOLDER_API_KEY") {
     console.warn("Cloudinary API Key/Secret missing. Simulating master record sync.");
-    return "https://res.cloudinary.com/demo/raw/upload/master_user_list.csv";
+    return "https://res.cloudinary.com/ds2mbrzcn/raw/upload/v1/master_user_list.csv";
   }
 
   const timestamp = Math.floor(Date.now() / 1000).toString();
-  const params = {
+  
+  // Params to be signed (excluding resource_type and file)
+  const signParams = {
     public_id: "master_user_list",
     overwrite: "true",
     timestamp: timestamp,
-    resource_type: "raw"
   };
 
   try {
-    const signature = await generateSignature(params, API_SECRET);
+    const signature = await generateSignature(signParams, API_SECRET);
     const formData = new FormData();
     formData.append("file", new Blob([csvContent], { type: 'text/csv' }), "master_user_list.csv");
     formData.append("api_key", API_KEY);
