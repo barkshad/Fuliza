@@ -46,9 +46,21 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
     if (maxLimit < 1000) maxLimit = 1000;
 
     // 2. Generate Dynamic Tiers
-    const goldLimit = maxLimit;
-    const silverLimit = Math.floor((maxLimit * 0.75) / 100) * 100;
-    const bronzeLimit = Math.floor((maxLimit * 0.50) / 100) * 100;
+    // Gold is always Max Limit.
+    // Silver is ~80%.
+    // Bronze is ~60% but min 1000 if possible to ensure decent fee.
+    
+    let goldLimit = maxLimit;
+    let silverLimit = Math.floor((maxLimit * 0.8) / 100) * 100;
+    let bronzeLimit = Math.floor((maxLimit * 0.6) / 100) * 100;
+
+    // Safety checks
+    if (bronzeLimit < 1000) bronzeLimit = 1000;
+    if (silverLimit <= bronzeLimit) silverLimit = bronzeLimit + 200;
+    if (goldLimit <= silverLimit) goldLimit = silverLimit + 200;
+
+    // FEE LOGIC: Strictly 30% of limit.
+    const getFee = (limit: number) => Math.ceil(limit * 0.3);
 
     const calculatedPlans: Plan[] = [
       {
@@ -56,7 +68,7 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
         name: 'Bronze Upgrade',
         badge: 'BASIC',
         limit: bronzeLimit,
-        fee: Math.ceil((bronzeLimit * 0.1) / 10) * 10, // 10% Fee
+        fee: getFee(bronzeLimit), 
         icon: 'B',
         iconColor: 'text-[#B45309]',
         iconBg: 'bg-[#FFEDD5]',
@@ -67,7 +79,7 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
         name: 'Silver Upgrade',
         badge: 'PRO',
         limit: silverLimit,
-        fee: Math.ceil((silverLimit * 0.1) / 10) * 10, // 10% Fee
+        fee: getFee(silverLimit), 
         icon: 'S',
         iconColor: 'text-[#334155]',
         iconBg: 'bg-[#F1F5F9]',
@@ -78,7 +90,7 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
         name: 'Gold Upgrade',
         badge: 'MAX',
         limit: goldLimit,
-        fee: Math.ceil((goldLimit * 0.1) / 10) * 10, // 10% Fee
+        fee: getFee(goldLimit), 
         icon: 'G',
         iconColor: 'text-[#A16207]',
         iconBg: 'bg-[#FEF9C3]',
@@ -141,15 +153,19 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
 
     try {
       // Initiate STK Push
-      await LipanaService.initiateSTKPush(
+      const response = await LipanaService.initiateSTKPush(
         profile.phone,
         plan.fee,
         `FULIZA_${Date.now()}`
       );
       
-      // Move to waiting state to prompt user to check phone
-      setPaymentStatus('waiting');
-      setCountDown(15);
+      if (response.success) {
+        // Move to waiting state to prompt user to check phone
+        setPaymentStatus('waiting');
+        setCountDown(15);
+      } else {
+        setPaymentStatus('failed');
+      }
       
     } catch (e) {
       console.error(e);

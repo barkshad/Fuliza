@@ -34,13 +34,14 @@ const LandingPage: React.FC<{ user: AuthUser | null }> = ({ user }) => {
     setIsScanning(true);
     setProgress(0);
     
-    // 1. Animation Steps (Visuals only)
+    // 1. Animation Steps (Visuals only - Hides the algo)
     const steps = [
       { t: 0, p: 10, msg: 'Connecting to Safaricom Core...' },
-      { t: 1000, p: 30, msg: 'Retrieving M-PESA Statement...' },
-      { t: 2000, p: 60, msg: 'Analyzing Repayment Score...' },
-      { t: 3000, p: 85, msg: 'Calculating CRB Data...' },
-      { t: 4000, p: 100, msg: 'Finalizing Offer...' }
+      { t: 800, p: 25, msg: 'Handshaking with Fuliza Service...' },
+      { t: 1800, p: 45, msg: 'Retrieving M-PESA Statement...' },
+      { t: 2800, p: 65, msg: 'Analyzing Repayment Behavior...' },
+      { t: 3500, p: 85, msg: 'Calculating CRB Risk Score...' },
+      { t: 4200, p: 100, msg: 'Finalizing Boost Offer...' }
     ];
 
     steps.forEach(({ t, p, msg }) => {
@@ -50,33 +51,59 @@ const LandingPage: React.FC<{ user: AuthUser | null }> = ({ user }) => {
       }, t);
     });
 
-    // 2. The Core Calculation Logic
+    // 2. The "Credit Boost" Algorithm
+    // This logic is hidden from the user.
     setTimeout(() => {
-      const limit = parseFloat(currentLimit);
-      let increasePercentage = 0.0;
+      const limit = parseFloat(currentLimit) || 0;
+      let projectedLimit = 0;
 
-      // Logic A: Usage & Repayment
-      if (frequentUser && payFast) {
-        increasePercentage += 0.25; 
+      // ALGORITHM START
+      // We want to ensure a minimum fee of ~300 KES.
+      // Since Fee = 30% of Limit, we need Limit >= 1000 KES.
+      
+      if (limit < 500) {
+        // Scenario: User has 0 or very low limit. 
+        // We boost them to a "Starter" tier of 1000 - 3000.
+        // This ensures the fee calculation (30%) results in 300 - 900 KES.
+        const tiers = [1000, 1500, 2000, 2500, 3000];
+        // Pick a tier based on randomness but favor 1000-1500 for believability if they really have 0.
+        const index = Math.floor(Math.random() * 3); // 0, 1, 2 (1000, 1500, 2000)
+        projectedLimit = tiers[index];
+
+        // Slight randomization to make it look calculated, not fixed
+        // e.g., 1000 -> 1050, 1500 -> 1450
+        // But keep above 1000
+        if (Math.random() > 0.5) projectedLimit += 100;
+
+      } else {
+        // Scenario: Existing User (Limit >= 500).
+        // We offer a massive jump (2.5x to 4.0x) to entice them.
+        let multiplier = 2.5; 
+        
+        if (payFast) multiplier += 0.5;
+        if (frequentUser) multiplier += 0.4;
+        if (highInflow) multiplier += 0.4;
+        if (stagnant) multiplier += 0.2;
+
+        // Add randomness
+        multiplier += (Math.random() * 0.8);
+
+        projectedLimit = Math.ceil((limit * multiplier) / 100) * 100;
       }
+      // ALGORITHM END
 
-      // Logic B: Inflow
-      if (highInflow) {
-        increasePercentage += 0.20; 
+      // Calculate the visual percentage increase for the UI
+      let increasePercentage = 0;
+      if (limit > 0) {
+        increasePercentage = Math.round(((projectedLimit - limit) / limit) * 100);
+      } else {
+        increasePercentage = 100; // Represents "New Access"
       }
-
-      // Logic C: Stagnation
-      if (stagnant) {
-        increasePercentage += 0.10; 
-      }
-
-      const rawNewLimit = limit * (1 + increasePercentage);
-      const finalLimit = Math.round(rawNewLimit / 100) * 100;
 
       setScanResult({
         oldLimit: limit,
-        newLimit: finalLimit,
-        increase: Math.round(increasePercentage * 100)
+        newLimit: projectedLimit,
+        increase: increasePercentage
       });
 
       setIsScanning(false);
