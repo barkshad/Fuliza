@@ -14,164 +14,112 @@ import KYCPage from './views/KYCPage';
 import Dashboard from './views/Dashboard';
 import AssessmentPage from './views/AssessmentPage';
 import PackagesPage from './views/PackagesPage';
-import BoostPage from './views/BoostPage';
+import BoostPage from './views/BoostPage'; // Import the BoostPage component
 
-const LoadingScreen = () => (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-    <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
-      <div className="w-20 h-20 bg-safaricom-green rounded-3xl flex items-center justify-center shadow-2xl shadow-safaricom-green/30 mb-6 transform -rotate-3">
-        <span className="text-white font-black text-5xl italic">F</span>
+// Footer Component
+const Footer = () => (
+  <footer className="bg-safaricom-dark text-white py-12 border-t border-slate-800 mt-auto">
+    <div className="container mx-auto px-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h4 className="text-lg font-black text-white mb-4">Safaricom PLC</h4>
+          <p className="text-slate-400 text-sm leading-relaxed">
+            Safaricom House, Waiyaki Way, Westlands, Nairobi. <br/>
+            PO Box 66827, 00800 Nairobi.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Services</h4>
+          <ul className="space-y-2 text-sm text-slate-400">
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">M-PESA</a></li>
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">Fuliza</a></li>
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">M-Shwari</a></li>
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">KCB M-PESA</a></li>
+          </ul>
+        </div>
+        <div>
+           <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Legal</h4>
+           <ul className="space-y-2 text-sm text-slate-400">
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">Terms & Conditions</a></li>
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">Data Privacy Statement</a></li>
+            <li><a href="#" className="hover:text-safaricom-green transition-colors">Fraud Reporting</a></li>
+           </ul>
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Connect</h4>
+          <div className="flex gap-4">
+            <a href="#" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-facebook-f text-sm"></i></a>
+            <a href="#" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-twitter text-sm"></i></a>
+            <a href="#" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-youtube text-sm"></i></a>
+          </div>
+        </div>
       </div>
-      <h1 className="text-3xl font-black text-slate-900 tracking-tighter mb-2">
-        Fuliza<span className="text-safaricom-green">.app</span>
-      </h1>
-      <div className="flex items-center space-x-2 opacity-60 mt-2">
-         <div className="w-2 h-2 rounded-full bg-[#D9232D] animate-bounce" style={{ animationDelay: '0s' }}></div>
-         <div className="w-2 h-2 rounded-full bg-safaricom-green animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-         <div className="w-2 h-2 rounded-full bg-black animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+      <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-xs text-slate-500">© 2024 Safaricom PLC. All Rights Reserved.</p>
+        <p className="text-xs text-slate-500">Regulated by the Central Bank of Kenya.</p>
       </div>
     </div>
-  </div>
+  </footer>
 );
-
-interface ProtectedRouteProps {
-  children?: React.ReactNode;
-  user: User | null;
-  loading: boolean;
-}
-
-const ProtectedRoute = ({ children, user, loading }: ProtectedRouteProps) => {
-  if (loading) return <LoadingScreen />;
-  if (!user) return <Navigate to="/auth" />;
-  return <>{children}</>;
-};
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      if (!firebaseUser) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      
+      if (currentUser) {
+        const unsubDoc = onSnapshot(doc(db, 'users', currentUser.uid), (doc) => {
+          if (doc.exists()) {
+            setProfile(doc.data() as UserProfile);
+          } else {
+            // Fallback to local store if Firestore fails/is slow
+            const local = LocalStore.getProfile(currentUser.uid);
+            if (local) setProfile(local);
+          }
+          setLoading(false);
+        }, (error) => {
+           console.warn("Firestore sync error", error);
+           const local = LocalStore.getProfile(currentUser.uid);
+           if (local) setProfile(local);
+           setLoading(false);
+        });
+        return () => unsubDoc();
+      } else {
         setProfile(null);
         setLoading(false);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
-  // Profile Listener with Local Fallback
-  useEffect(() => {
-    if (user) {
-      setLoading(true);
-      
-      // 1. Try Local Storage first for instant UI
-      const localProfile = LocalStore.getProfile(user.uid);
-      if (localProfile) {
-        setProfile(localProfile);
-      }
-
-      // 2. Try Firestore
-      const docRef = doc(db, 'users', user.uid);
-      const unsubscribe = onSnapshot(docRef, 
-        (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data() as UserProfile;
-            setProfile(data);
-            LocalStore.saveProfile(data); // Sync DB to Local
-          } else {
-            // Document doesn't exist in DB (new user or error?)
-            // If we have local profile, we keep it, otherwise null
-            if (!localProfile) setProfile(null);
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Profile sync error, relying on local backup:", error);
-          setLoading(false);
-        }
-      );
-      return () => unsubscribe();
-    }
-  }, [user]);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-16 h-16 border-4 border-slate-100 border-t-safaricom-green rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-[#FDFDFD]">
-        {/* Navbar */}
-        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex justify-between items-center">
-            <Link to="/" className="flex items-center space-x-2 group">
-              <div className="w-10 h-10 bg-safaricom-green rounded-xl flex items-center justify-center shadow-lg shadow-safaricom-green/20 transition-transform group-hover:rotate-3">
-                <span className="text-white font-bold text-xl">F</span>
-              </div>
-              <span className="text-xl font-bold text-safaricom-dark tracking-tight">Fuliza</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <Link to="/packages" className="hidden md:flex items-center text-sm font-bold text-gray-500 hover:text-safaricom-green transition-colors">
-                    Upgrade
-                  </Link>
-                  <button 
-                    onClick={() => auth.signOut()} 
-                    className="w-8 h-8 md:w-auto md:h-auto md:px-5 md:py-2.5 rounded-full md:rounded-xl bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600 font-bold text-xs transition-all flex items-center justify-center"
-                  >
-                    <i className="fa-solid fa-power-off md:mr-2"></i>
-                    <span className="hidden md:inline">Sign Out</span>
-                  </button>
-                </>
-              ) : (
-                <Link to="/auth" className="text-sm font-bold text-safaricom-green hover:underline">
-                  Sign In
-                </Link>
-              )}
-            </div>
-          </div>
-        </nav>
-
-        {/* Routes */}
+      <div className="min-h-screen flex flex-col font-sans text-slate-900 bg-white">
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<LandingPage user={user} />} />
-            <Route path="/auth" element={
-              loading ? <LoadingScreen /> : (user ? <Navigate to="/dashboard" /> : <AuthPage />)
-            } />
-            <Route path="/kyc" element={
-              <ProtectedRoute user={user} loading={loading}>
-                <KYCPage profile={profile} />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute user={user} loading={loading}>
-                <Dashboard profile={profile} />
-              </ProtectedRoute>
-            } />
-            <Route path="/assessment" element={
-              <ProtectedRoute user={user} loading={loading}>
-                <AssessmentPage profile={profile} />
-              </ProtectedRoute>
-            } />
-            <Route path="/boost" element={
-              <ProtectedRoute user={user} loading={loading}>
-                <BoostPage profile={profile} />
-              </ProtectedRoute>
-            } />
-            <Route path="/packages" element={
-              <ProtectedRoute user={user} loading={loading}>
-                <PackagesPage profile={profile} />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/dashboard" />} />
+            <Route path="/kyc" element={user ? <KYCPage profile={profile} /> : <Navigate to="/auth" />} />
+            <Route path="/dashboard" element={user ? <Dashboard profile={profile} /> : <Navigate to="/auth" />} />
+            <Route path="/assessment" element={user ? <AssessmentPage profile={profile} /> : <Navigate to="/auth" />} />
+            <Route path="/packages" element={user ? <PackagesPage profile={profile} /> : <Navigate to="/auth" />} />
+            <Route path="/boost" element={user ? <BoostPage profile={profile} /> : <Navigate to="/auth" />} />
           </Routes>
         </main>
-
-        <footer className="py-8 text-center text-[10px] text-gray-400 border-t border-gray-100">
-          <p>© {new Date().getFullYear()} Fuliza Independent Credit Systems. Not affiliated with Safaricom PLC.</p>
-        </footer>
+        <Footer />
       </div>
     </Router>
   );
