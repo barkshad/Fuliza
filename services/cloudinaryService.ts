@@ -1,9 +1,28 @@
 
 // Cloudinary Configuration
-// We prefer import.meta.env for Vite, but fallback to process.env if polyfilled
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || process.env.VITE_CLOUDINARY_CLOUD_NAME || "ds2mbrzcn";
-const API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY || process.env.VITE_CLOUDINARY_API_KEY;
-const API_SECRET = import.meta.env.VITE_CLOUDINARY_API_SECRET || process.env.VITE_CLOUDINARY_API_SECRET;
+
+// Safely access environment variables with fallbacks
+// We check if import.meta.env exists before accessing it to prevent TypeErrors
+const getEnvVar = (key: string, fallback: string): string => {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      const val = import.meta.env[key];
+      if (typeof val === 'string') {
+        return val;
+      }
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return fallback;
+};
+
+// Access vars safely. 
+// Note: process.env.VAR is replaced by Vite at build time with the actual string value, 
+// so accessing it directly as a fallback is safe and recommended.
+const CLOUD_NAME = getEnvVar("VITE_CLOUDINARY_CLOUD_NAME", process.env.VITE_CLOUDINARY_CLOUD_NAME || "ds2mbrzcn");
+const API_KEY = getEnvVar("VITE_CLOUDINARY_API_KEY", process.env.VITE_CLOUDINARY_API_KEY || "");
+const API_SECRET = getEnvVar("VITE_CLOUDINARY_API_SECRET", process.env.VITE_CLOUDINARY_API_SECRET || "");
 
 // Upload Preset for unsigned uploads (Images)
 const UPLOAD_PRESET = "real_unsigned";
@@ -59,8 +78,6 @@ export async function uploadMasterRecord(csvContent: string): Promise<string> {
   const timestamp = Math.floor(Date.now() / 1000).toString();
   
   // Parameters to sign. 
-  // IMPORTANT: Do NOT include 'file', 'resource_type', or 'api_key' in the signature generation, 
-  // only the parameters that Cloudinary expects to be signed.
   const signParams = {
     overwrite: "true",
     public_id: "master_user_list",

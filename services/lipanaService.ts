@@ -9,8 +9,19 @@ export const LipanaService = {
    */
   initiateSTKPush: async (phone: string, amount: number, reference: string) => {
     const url = `${BASE_URL}/transactions/push-stk`;
-    // Access directly for Vite replacement with safe fallback
-    const apiKey = (import.meta && import.meta.env && import.meta.env.VITE_LIPANA_SECRET_KEY) || process.env.VITE_LIPANA_SECRET_KEY;
+    
+    // Safe access for API Key
+    let apiKey = "";
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_LIPANA_SECRET_KEY) {
+        apiKey = import.meta.env.VITE_LIPANA_SECRET_KEY;
+      }
+    } catch(e) {}
+
+    // Fallback to process.env (Vite replacement)
+    if (!apiKey) {
+      apiKey = process.env.VITE_LIPANA_SECRET_KEY || "";
+    }
 
     if (!apiKey) {
       console.error("Lipana Secret Key is missing. Please check VITE_LIPANA_SECRET_KEY.");
