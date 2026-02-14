@@ -14,6 +14,7 @@ import KYCPage from './views/KYCPage';
 import Dashboard from './views/Dashboard';
 import AssessmentPage from './views/AssessmentPage';
 import PackagesPage from './views/PackagesPage';
+import BoostPage from './views/BoostPage';
 
 const LoadingScreen = () => (
   <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -137,7 +138,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<LandingPage user={user} />} />
             <Route path="/auth" element={
-              loading ? <LoadingScreen /> : (user ? <Navigate to="/packages" /> : <AuthPage />)
+              loading ? <LoadingScreen /> : (user ? <Navigate to="/dashboard" /> : <AuthPage />)
             } />
             <Route path="/kyc" element={
               <ProtectedRoute user={user} loading={loading}>
@@ -152,6 +153,11 @@ const App: React.FC = () => {
             <Route path="/assessment" element={
               <ProtectedRoute user={user} loading={loading}>
                 <AssessmentPage profile={profile} />
+              </ProtectedRoute>
+            } />
+            <Route path="/boost" element={
+              <ProtectedRoute user={user} loading={loading}>
+                <BoostPage profile={profile} />
               </ProtectedRoute>
             } />
             <Route path="/packages" element={

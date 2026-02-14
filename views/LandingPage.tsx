@@ -85,7 +85,14 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
   };
 
   const handleClaim = () => {
-    navigate(user ? '/dashboard' : '/auth');
+    // Save the prediction to session storage so we can use it on the Boost page
+    sessionStorage.setItem('fuliza_boost_data', JSON.stringify({
+      current: scanResult.oldLimit,
+      projected: scanResult.newLimit
+    }));
+    
+    // Always go to auth first (Account Creation + KYC)
+    navigate('/auth');
   };
 
   const Checkbox: React.FC<{ label: string, checked: boolean, onChange: (v: boolean) => void }> = ({ label, checked, onChange }) => (

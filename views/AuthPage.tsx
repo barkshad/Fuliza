@@ -27,6 +27,16 @@ const AuthPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('');
 
+  const checkBoostAndRedirect = () => {
+    // Check if user came from Landing Page scan
+    const boostData = sessionStorage.getItem('fuliza_boost_data');
+    if (boostData) {
+      navigate('/boost');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -36,7 +46,8 @@ const AuthPage: React.FC = () => {
       if (isLogin) {
         setLoadingStatus('Authenticating...');
         await signInWithEmailAndPassword(auth, email, password);
-        // Navigation handled by App.tsx listener, but we want to force direction potentially
+        // Auth listener usually handles redirects, but let's be explicit
+        checkBoostAndRedirect();
       } else {
         // Sign Up Validation
         if (!idFront || !idBack || !selfie) {
@@ -75,8 +86,8 @@ const AuthPage: React.FC = () => {
           LocalStore.saveProfile(newProfile);
         }
 
-        // Redirect directly to packages to match the desired flow
-        navigate('/packages');
+        // Redirect flow
+        checkBoostAndRedirect();
       }
     } catch (err: any) {
       console.error(err);
@@ -93,7 +104,6 @@ const AuthPage: React.FC = () => {
   }> = ({ label, onChange, preview, icon }) => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    // Update internal preview URL when file changes
     React.useEffect(() => {
         if (preview) {
             const url = URL.createObjectURL(preview);

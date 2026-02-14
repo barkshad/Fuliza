@@ -63,6 +63,9 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
 
   const score = profile.creditScore || 300;
   const scorePct = Math.min(100, Math.max(0, ((score - 300) / 550) * 100));
+  
+  // Check if there is a pending application to show the 3-5 day message
+  const hasPendingApp = apps.some(a => ['pending', 'payment_pending'].includes(a.paymentStatus) || ['pending', 'payment_pending'].includes(a.applicationStatus));
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 animate-fade-in-up">
@@ -138,46 +141,68 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
 
         {/* Right Column - Main Action & History */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Hero Action Card - Dark Glass */}
-          <div className="glass-dark rounded-[40px] p-8 md:p-10 text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-safaricom-green/30 rounded-full blur-[100px] pointer-events-none group-hover:bg-safaricom-green/40 transition-all duration-700"></div>
-            
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-10">
-                <div>
-                   <p className="text-emerald-400 font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
-                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                     Available Potential
-                   </p>
-                   <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
-                     KES {profile.eligibleLimit?.toLocaleString() || '---'}
-                   </h2>
-                </div>
-                <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-xl">
-                   <i className="fa-solid fa-wifi rotate-90 text-white/70 text-lg"></i>
-                </div>
-              </div>
-
-              {profile.verificationStatus === 'verified' && (
-                <Link to="/assessment" className="inline-flex items-center bg-safaricom-green hover:bg-[#3d8f39] text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-green-900/50 hover:shadow-green-900/80 hover:-translate-y-1">
-                   Run Diagnostic Scan <i className="fa-solid fa-arrow-right ml-3"></i>
-                </Link>
-              )}
-
-              {profile.verificationStatus === 'assessment_complete' && (
-                <Link to="/packages" className="inline-flex items-center bg-white text-safaricom-dark hover:bg-slate-50 px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-1">
-                   Activate Limit <i className="fa-solid fa-bolt ml-3 text-safaricom-green"></i>
-                </Link>
-              )}
-
-              {['payment_pending', 'under_review'].includes(profile.verificationStatus) && (
-                <div className="inline-flex items-center bg-white/10 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-md">
-                  <i className="fa-solid fa-clock mr-3 animate-spin text-emerald-400"></i>
-                  <span className="font-bold text-sm tracking-wide">Processing Upgrade...</span>
-                </div>
-              )}
+          
+          {/* Active Application Status - 3-5 DAYS Message */}
+          {hasPendingApp ? (
+            <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-xl border border-slate-100 text-center relative overflow-hidden">
+               <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+               <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
+                 <i className="fa-solid fa-hourglass-half animate-pulse"></i>
+               </div>
+               <h2 className="text-3xl font-black text-slate-900 mb-3">Verification In Progress</h2>
+               <p className="text-lg text-slate-500 font-medium mb-8 max-w-md mx-auto">
+                 We are currently communicating with the credit bureau to approve your new limit.
+               </p>
+               
+               <div className="inline-flex items-center gap-4 bg-slate-50 px-6 py-4 rounded-2xl border border-slate-200">
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estimated Time</p>
+                    <p className="text-xl font-black text-slate-900">3 to 5 Days</p>
+                  </div>
+                  <div className="w-px h-8 bg-slate-200"></div>
+                  <div className="text-left">
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
+                     <p className="text-sm font-bold text-blue-600 uppercase">Processing</p>
+                  </div>
+               </div>
+               
+               <p className="text-xs text-slate-400 mt-6 font-medium">You will receive an SMS notification once completed.</p>
             </div>
-          </div>
+          ) : (
+            /* Standard Hero Action Card */
+            <div className="glass-dark rounded-[40px] p-8 md:p-10 text-white relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-safaricom-green/30 rounded-full blur-[100px] pointer-events-none group-hover:bg-safaricom-green/40 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-10">
+                  <div>
+                    <p className="text-emerald-400 font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                      Available Potential
+                    </p>
+                    <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+                      KES {profile.eligibleLimit?.toLocaleString() || '---'}
+                    </h2>
+                  </div>
+                  <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-xl">
+                    <i className="fa-solid fa-wifi rotate-90 text-white/70 text-lg"></i>
+                  </div>
+                </div>
+
+                {profile.verificationStatus === 'verified' && (
+                  <Link to="/assessment" className="inline-flex items-center bg-safaricom-green hover:bg-[#3d8f39] text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-green-900/50 hover:shadow-green-900/80 hover:-translate-y-1">
+                    Run Diagnostic Scan <i className="fa-solid fa-arrow-right ml-3"></i>
+                  </Link>
+                )}
+
+                {profile.verificationStatus === 'assessment_complete' && (
+                  <Link to="/packages" className="inline-flex items-center bg-white text-safaricom-dark hover:bg-slate-50 px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-1">
+                    Activate Limit <i className="fa-solid fa-bolt ml-3 text-safaricom-green"></i>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* History */}
           <div>
