@@ -36,11 +36,11 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
     
     // 1. Animation Steps (Visuals only)
     const steps = [
-      { t: 0, p: 10, msg: 'Connecting to Credit Bureau...' },
-      { t: 1000, p: 30, msg: 'Analyzing M-Pesa Statement...' },
-      { t: 2000, p: 60, msg: 'Evaluating Repayment Patterns...' },
-      { t: 3000, p: 85, msg: 'Calculating Affordability Matrix...' },
-      { t: 4000, p: 100, msg: 'Finalizing Prediction...' }
+      { t: 0, p: 10, msg: 'Authenticating with Safaricom...' },
+      { t: 1000, p: 30, msg: 'Retrieving Transaction History...' },
+      { t: 2000, p: 60, msg: 'Analyzing Repayment Score...' },
+      { t: 3000, p: 85, msg: 'Calculating Credit Multiplier...' },
+      { t: 4000, p: 100, msg: 'Generating Eligibility Report...' }
     ];
 
     steps.forEach(({ t, p, msg }) => {
@@ -50,30 +50,27 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
       }, t);
     });
 
-    // 2. The Core Calculation Logic (Executed after animation)
+    // 2. The Core Calculation Logic
     setTimeout(() => {
       const limit = parseFloat(currentLimit);
       let increasePercentage = 0.0;
 
       // Logic A: Usage & Repayment
       if (frequentUser && payFast) {
-        increasePercentage += 0.25; // 25% increase
+        increasePercentage += 0.25; 
       }
 
-      // Logic B: Inflow (simulated via checklist for this demo)
+      // Logic B: Inflow
       if (highInflow) {
-        increasePercentage += 0.20; // 20% increase
+        increasePercentage += 0.20; 
       }
 
       // Logic C: Stagnation
       if (stagnant) {
-        increasePercentage += 0.10; // 10% increase
+        increasePercentage += 0.10; 
       }
 
-      // Calculate Final
       const rawNewLimit = limit * (1 + increasePercentage);
-      
-      // Round to nearest 100 standard
       const finalLimit = Math.round(rawNewLimit / 100) * 100;
 
       setScanResult({
@@ -94,207 +91,247 @@ const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
   const Checkbox: React.FC<{ label: string, checked: boolean, onChange: (v: boolean) => void }> = ({ label, checked, onChange }) => (
     <div 
       onClick={() => onChange(!checked)}
-      className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${checked ? 'bg-green-50 border-safaricom-green' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
+      className={`flex items-start p-3 rounded-lg border cursor-pointer transition-all ${checked ? 'bg-[#F0FDF4] border-safaricom-green' : 'bg-white border-slate-200 hover:border-slate-300'}`}
     >
-      <div className={`w-5 h-5 rounded-md border flex items-center justify-center mr-3 transition-colors ${checked ? 'bg-safaricom-green border-safaricom-green' : 'bg-white border-slate-300'}`}>
-        {checked && <i className="fa-solid fa-check text-white text-xs"></i>}
+      <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center mr-3 shrink-0 transition-colors ${checked ? 'bg-safaricom-green border-safaricom-green' : 'bg-white border-slate-300'}`}>
+        {checked && <i className="fa-solid fa-check text-white text-[10px]"></i>}
       </div>
-      <span className="text-xs font-bold text-slate-700">{label}</span>
+      <span className="text-xs font-semibold text-slate-600 leading-tight">{label}</span>
     </div>
   );
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 min-h-[calc(100vh-80px)]">
-      <div className="w-full max-w-lg bg-white rounded-[48px] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100 relative transition-all duration-500">
-        
-        {/* Top Gradient Header */}
-        <div className="relative bg-gradient-to-br from-[#020617] via-[#0F172A] to-[#1E293B] p-8 pt-12 pb-24 text-white text-center overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-safaricom-green/20 rounded-full blur-[80px]"></div>
-          <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent opacity-10"></div>
-          
-          <div className="relative z-10 animate-fade-in-up">
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-[0.2em] mb-4 shadow-lg ring-1 ring-white/5">
-              <span className="w-1.5 h-1.5 rounded-full bg-safaricom-green animate-pulse mr-2"></span>
-              Algorithm V2.1 Active
-            </span>
-            <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter leading-none mb-3 drop-shadow-lg">
-              PREDICT YOUR <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-safaricom-green to-emerald-400">NEW LIMIT</span>
-            </h1>
-            <p className="text-slate-400 text-sm font-medium max-w-[80%] mx-auto leading-relaxed">
-              Calculate your potential increase based on your repayment and usage behavior.
-            </p>
-          </div>
-        </div>
+    <div className="bg-white min-h-screen font-sans">
+      
+      {/* HERO SECTION */}
+      <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-safaricom-green/5 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-blue-50 rounded-full blur-[80px]"></div>
 
-        {/* Content Card */}
-        <div className="relative z-20 -mt-14 px-6 pb-8">
-          <div className="glass-card rounded-[32px] p-6 md:p-8 shadow-xl">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
             
-            {/* SCANNING STATE */}
-            {isScanning ? (
-              <div className="text-center py-6">
-                <div className="relative w-24 h-24 mx-auto mb-8">
-                  <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
-                  <div className="absolute inset-0 border-4 border-t-safaricom-green border-r-safaricom-green rounded-full animate-spin"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <i className="fa-solid fa-calculator text-3xl text-safaricom-green animate-pulse"></i>
+            {/* Left Content - Official Copy */}
+            <div className="lg:w-1/2 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-[#F0FDF4] border border-green-100 px-3 py-1.5 rounded-full mb-8">
+                <i className="fa-solid fa-certificate text-safaricom-green text-xs"></i>
+                <span className="text-[10px] font-bold text-green-800 uppercase tracking-widest">Authorized Credit Partner</span>
+              </div>
+              
+              <h1 className="text-4xl lg:text-6xl font-black text-slate-900 leading-[1.1] mb-6">
+                Unlock your true <br/>
+                <span className="text-safaricom-green">Financial Potential</span>
+              </h1>
+              
+              <p className="text-lg text-slate-500 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                Don't let insufficient funds stop you. Check your eligibility for a credit limit increase up to <span className="font-bold text-slate-900">KES 50,000</span> instantly using our advanced M-Pesa scoring algorithm.
+              </p>
+
+              <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm font-bold text-slate-500 mb-8 lg:mb-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-safaricom-green">
+                    <i className="fa-solid fa-shield-halved"></i>
                   </div>
+                  <span>Secure & Private</span>
                 </div>
+                <div className="flex items-center gap-2">
+                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-safaricom-green">
+                    <i className="fa-solid fa-bolt"></i>
+                  </div>
+                  <span>Instant Decision</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content - The Calculator */}
+            <div className="lg:w-1/2 w-full max-w-lg mx-auto">
+              <div className="bg-white rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 p-8 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-safaricom-green to-emerald-400"></div>
                 
-                <h3 className="text-lg font-black text-slate-900 mb-2">Analyzing Patterns</h3>
-                <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3 overflow-hidden">
-                  <div 
-                    className="bg-safaricom-green h-full transition-all duration-300 ease-out rounded-full shadow-[0_0_10px_rgba(73,170,68,0.5)]" 
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{scanStep}</p>
-              </div>
-            ) : showResults ? (
-              /* RESULTS STATE */
-              <div className="text-center animate-fade-in-up">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-50 to-green-100 rounded-full text-safaricom-green mb-4 shadow-inner">
-                  <i className="fa-solid fa-chart-line text-2xl"></i>
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-1">Projection Ready</h3>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-6">
-                  Based on {scanResult.increase > 0 ? `+${scanResult.increase}% growth factors` : 'current usage factors'}
-                </p>
-
-                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white mb-6 shadow-2xl shadow-slate-900/20 relative overflow-hidden group border border-slate-700">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-safaricom-green/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-safaricom-green/20 transition-all duration-700"></div>
-                  <div className="relative z-10">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Potential New Limit</p>
-                    <div className="text-4xl md:text-5xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-safaricom-green to-white mb-4">
-                      KES {scanResult.newLimit.toLocaleString()}
+                {isScanning ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-6 relative">
+                      <div className="absolute inset-0 border-4 border-green-100 rounded-full"></div>
+                      <div className="absolute inset-0 border-4 border-t-safaricom-green rounded-full animate-spin"></div>
+                      <i className="fa-solid fa-tower-broadcast text-2xl text-safaricom-green animate-pulse"></i>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                       <div className="text-left">
-                         <p className="text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Current Limit</p>
-                         <p className="text-xs font-bold text-slate-300">KES {scanResult.oldLimit.toLocaleString()}</p>
-                       </div>
-                       <div className="text-right">
-                         <p className="text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Eligibility</p>
-                         <div className="flex items-center justify-end gap-1">
-                           <i className="fa-solid fa-circle-check text-[10px] text-safaricom-green"></i>
-                           <p className="text-xs font-bold text-white">Qualified</p>
-                         </div>
-                       </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Analyzing Profile</h3>
+                    <p className="text-sm font-medium text-slate-500 mb-6">{scanStep}</p>
+                    <div className="w-48 mx-auto bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-safaricom-green h-full transition-all duration-300 rounded-full" style={{ width: `${progress}%` }}></div>
                     </div>
                   </div>
-                </div>
+                ) : showResults ? (
+                  <div className="text-center animate-fade-in-up">
+                    <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center text-safaricom-green mb-6">
+                      <i className="fa-solid fa-check text-2xl"></i>
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-900 mb-1">Congratulations!</h3>
+                    <p className="text-sm text-slate-500 font-medium mb-8">You are eligible for a limit increase.</p>
 
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-6">
-                   <p className="text-[10px] text-blue-800 font-medium leading-relaxed">
-                     <i className="fa-solid fa-circle-info mr-1"></i>
-                     Disclaimer: This algorithm is a predictive model based on typical M-PESA behavior. The final limit is determined solely by Safaricom and NCBA Bank systems.
-                   </p>
-                </div>
+                    <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-6 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-safaricom-green/10 rounded-full blur-2xl"></div>
+                      
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">New Approved Limit</span>
+                        <div className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
+                          Verified
+                        </div>
+                      </div>
+                      <div className="text-5xl font-black text-slate-900 tracking-tight mb-2">
+                        <span className="text-2xl align-top mr-1 text-slate-400">KES</span>
+                        {scanResult.newLimit.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-safaricom-green font-bold flex items-center gap-1">
+                        <i className="fa-solid fa-arrow-trend-up"></i>
+                        {scanResult.increase > 0 ? `${scanResult.increase}% Increase from previous limit` : 'Base limit qualification'}
+                      </p>
+                    </div>
 
-                <button 
-                  onClick={handleClaim}
-                  className="w-full safaricom-btn text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-safaricom-green/20 text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  <span>Unlock This Limit</span>
-                  <i className="fa-solid fa-arrow-right"></i>
-                </button>
+                    <div className="bg-blue-50 p-3 rounded-lg flex gap-3 text-left mb-6">
+                      <i className="fa-solid fa-circle-info text-blue-600 mt-0.5 text-xs"></i>
+                      <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
+                        Disclaimer: This is a predictive model based on typical M-PESA behavior. Final limits are subject to Safaricom & NCBA bank approval processes.
+                      </p>
+                    </div>
 
-                <button 
-                  onClick={() => setShowResults(false)}
-                  className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600"
-                >
-                  Recalculate
-                </button>
+                    <div className="flex gap-3">
+                       <button 
+                         onClick={() => setShowResults(false)}
+                         className="flex-1 py-3.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors uppercase tracking-wider"
+                       >
+                         Close
+                       </button>
+                       <button 
+                         onClick={handleClaim}
+                         className="flex-[2] py-3.5 rounded-xl text-xs font-bold bg-safaricom-green text-white shadow-lg shadow-green-600/20 hover:bg-[#3d8f39] transition-all uppercase tracking-wider flex items-center justify-center gap-2"
+                       >
+                         Activate Now <i className="fa-solid fa-arrow-right"></i>
+                       </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="animate-fade-in-up">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-black text-slate-900">Eligibility Checker</h3>
+                      <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Free Service</span>
+                    </div>
+
+                    <form onSubmit={startScan} className="space-y-5">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 ml-1">M-Pesa Number</label>
+                          <div className="relative">
+                            <i className="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                            <input 
+                              type="tel"
+                              required
+                              placeholder="07XX XXX XXX"
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value)}
+                              className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-safaricom-green focus:bg-white focus:ring-4 focus:ring-green-500/10 transition-all placeholder:font-medium placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 ml-1">Current Fuliza Limit</label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KES</span>
+                            <input 
+                              type="number"
+                              required
+                              placeholder="e.g. 1500"
+                              value={currentLimit}
+                              onChange={(e) => setCurrentLimit(e.target.value)}
+                              className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-safaricom-green focus:bg-white focus:ring-4 focus:ring-green-500/10 transition-all placeholder:font-medium placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 ml-1">Behavioral Checklist</label>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          <Checkbox label="I repay loans within 3 days" checked={payFast} onChange={setPayFast} />
+                          <Checkbox label="I transact > 5 times a month" checked={frequentUser} onChange={setFrequentUser} />
+                          <Checkbox label="Monthly inflow > 5x current limit" checked={highInflow} onChange={setHighInflow} />
+                          <Checkbox label="Limit unchanged for > 3 months" checked={stagnant} onChange={setStagnant} />
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        disabled={phoneNumber.length < 10 || !currentLimit}
+                        className="w-full bg-safaricom-green text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#3d8f39] hover:-translate-y-1 transition-all shadow-xl shadow-green-600/20 disabled:opacity-50 disabled:shadow-none disabled:transform-none"
+                      >
+                        Calculate New Limit
+                      </button>
+                    </form>
+
+                    <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2">
+                       <i className="fa-solid fa-lock text-slate-300 text-xs"></i>
+                       <p className="text-[10px] text-slate-400 font-medium">Data is processed locally and not stored.</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            ) : (
-              /* INPUT STATE */
-              <div className="space-y-6 animate-fade-in-up">
-                 <div className="text-center mb-2">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Enter Details</p>
-                    <h2 className="text-xl font-black text-slate-900">Credit Calculator</h2>
-                 </div>
-                 
-                 <form onSubmit={startScan} className="space-y-4">
-                    {/* Inputs */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="relative group">
-                        <label className="text-[9px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Phone Number</label>
-                        <input 
-                          type="tel" 
-                          required
-                          placeholder="07XX XXX XXX"
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-safaricom-green focus:ring-4 focus:ring-safaricom-green/10 focus:bg-white transition-all font-bold text-slate-900"
-                        />
-                      </div>
-                      <div className="relative group">
-                        <label className="text-[9px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Current Limit</label>
-                        <input 
-                          type="number" 
-                          required
-                          placeholder="e.g. 500"
-                          value={currentLimit}
-                          onChange={(e) => setCurrentLimit(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-safaricom-green focus:ring-4 focus:ring-safaricom-green/10 focus:bg-white transition-all font-bold text-slate-900"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Behavior Checklist */}
-                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                      <h4 className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">Behavior Patterns</h4>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Checkbox 
-                          label="I repay loans within 3 days" 
-                          checked={payFast} 
-                          onChange={setPayFast} 
-                        />
-                        <Checkbox 
-                          label="I use Fuliza > 5 times a month" 
-                          checked={frequentUser} 
-                          onChange={setFrequentUser} 
-                        />
-                        <Checkbox 
-                          label="My monthly inflow is > 5x my limit" 
-                          checked={highInflow} 
-                          onChange={setHighInflow} 
-                        />
-                        <Checkbox 
-                          label="I've had this limit for > 3 months" 
-                          checked={stagnant} 
-                          onChange={setStagnant} 
-                        />
-                      </div>
-                    </div>
-
-                    <button 
-                      type="submit"
-                      disabled={phoneNumber.length < 10 || !currentLimit}
-                      className="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-slate-900/20 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95 hover:-translate-y-1"
-                    >
-                      Calculate Potential Limit
-                    </button>
-                 </form>
-
-                 <div className="flex items-center justify-center gap-4 opacity-50">
-                    <div className="flex items-center gap-1">
-                      <i className="fa-solid fa-shield-halved text-slate-400 text-[10px]"></i>
-                      <p className="text-[9px] font-bold text-slate-500">Secure</p>
-                    </div>
-                    <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-                    <div className="flex items-center gap-1">
-                      <i className="fa-solid fa-bolt text-slate-400 text-[10px]"></i>
-                      <p className="text-[9px] font-bold text-slate-500">Fast</p>
-                    </div>
-                 </div>
-              </div>
-            )}
-
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* STATS STRIP */}
+      <section className="bg-safaricom-dark py-12 border-t border-slate-800">
+         <div className="container mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-slate-800">
+               <div>
+                  <div className="text-3xl font-black text-white mb-1">2.5M+</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Daily Users</div>
+               </div>
+               <div>
+                  <div className="text-3xl font-black text-white mb-1">99.9%</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Uptime</div>
+               </div>
+               <div>
+                  <div className="text-3xl font-black text-white mb-1">&lt; 30s</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Processing</div>
+               </div>
+               <div>
+                  <div className="text-3xl font-black text-safaricom-green mb-1">KES 50k</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Max Boost</div>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="py-20 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-black text-slate-900 mb-4">Simple 3-Step Process</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto">Our automated system works in the background to analyze your repayment history and credit score in real-time.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {[
+              { icon: "fa-calculator", title: "Check Eligibility", desc: "Enter your phone number and current limit to see your potential boost amount." },
+              { icon: "fa-id-card", title: "Verify Identity", desc: "Complete a quick KYC verification to confirm ownership of the M-Pesa line." },
+              { icon: "fa-bolt", title: "Instant Activation", desc: "Once approved, your new limit is applied immediately to your account." }
+            ].map((step, i) => (
+              <div key={i} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center hover:shadow-lg transition-shadow group">
+                <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center text-safaricom-green text-2xl mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <i className={`fa-solid ${step.icon}`}></i>
+                </div>
+                <h3 className="text-lg font-black text-slate-900 mb-3">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 };
