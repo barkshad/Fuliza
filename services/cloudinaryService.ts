@@ -1,13 +1,17 @@
 
 // Cloudinary Configuration
-const CLOUD_NAME = "ds2mbrzcn"; 
-const API_KEY = "PLACEHOLDER_API_KEY"; 
-const API_SECRET = "PLACEHOLDER_API_SECRET"; 
+// We prefer import.meta.env for Vite, but fallback to process.env if polyfilled
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || process.env.VITE_CLOUDINARY_CLOUD_NAME || "ds2mbrzcn";
+const API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY || process.env.VITE_CLOUDINARY_API_KEY;
+const API_SECRET = import.meta.env.VITE_CLOUDINARY_API_SECRET || process.env.VITE_CLOUDINARY_API_SECRET;
+
+// Upload Preset for unsigned uploads (Images)
+const UPLOAD_PRESET = "real_unsigned";
 
 export async function uploadToCloudinary(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "real_unsigned");
+  formData.append("upload_preset", UPLOAD_PRESET);
   formData.append("folder", "user_docs"); 
 
   try {
@@ -20,7 +24,8 @@ export async function uploadToCloudinary(file: File): Promise<string> {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to upload image. Please try again.");
+      const err = await response.json();
+      throw new Error(err.error?.message || "Failed to upload image.");
     }
 
     const data = await response.json();
@@ -33,10 +38,12 @@ export async function uploadToCloudinary(file: File): Promise<string> {
 
 // Helper to generate SHA-1 signature for signed uploads (Browser-compatible)
 async function generateSignature(params: Record<string, string>, apiSecret: string) {
-  // Sort keys and join
+  // Sort keys alphabetically
   const sortedKeys = Object.keys(params).sort();
+  // Create string to sign: key=value&key2=value2...&api_secret
   const stringToSign = sortedKeys.map(key => `${key}=${params[key]}`).join('&') + apiSecret;
   
+  // Hash using SHA-1
   const msgBuffer = new TextEncoder().encode(stringToSign);
   const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -44,23 +51,25 @@ async function generateSignature(params: Record<string, string>, apiSecret: stri
 }
 
 export async function uploadMasterRecord(csvContent: string): Promise<string> {
-  // If API credentials are not set (default), return a mock URL for demo purposes
-  if (API_KEY === "PLACEHOLDER_API_KEY") {
-    console.warn("Cloudinary API Key/Secret missing. Simulating master record sync.");
-    return "https://res.cloudinary.com/ds2mbrzcn/raw/upload/v1/master_user_list.csv";
+  if (!API_KEY || !API_SECRET) {
+    console.error("Cloudinary API Key or Secret is missing in environment variables.");
+    throw new Error("Configuration Error: Missing Cloudinary Credentials");
   }
 
   const timestamp = Math.floor(Date.now() / 1000).toString();
   
-  // Params to be signed (excluding resource_type and file)
+  // Parameters to sign. 
+  // IMPORTANT: Do NOT include 'file', 'resource_type', or 'api_key' in the signature generation, 
+  // only the parameters that Cloudinary expects to be signed.
   const signParams = {
-    public_id: "master_user_list",
     overwrite: "true",
+    public_id: "master_user_list",
     timestamp: timestamp,
   };
 
   try {
     const signature = await generateSignature(signParams, API_SECRET);
+    
     const formData = new FormData();
     formData.append("file", new Blob([csvContent], { type: 'text/csv' }), "master_user_list.csv");
     formData.append("api_key", API_KEY);
@@ -69,6 +78,7 @@ export async function uploadMasterRecord(csvContent: string): Promise<string> {
     formData.append("overwrite", "true");
     formData.append("signature", signature);
 
+    // Using 'raw' resource type for CSV files
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`,
       {
