@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
       'process.env': {
         ...process.env,
         API_KEY: env.API_KEY,
-        VITE_LIPANA_SECRET_KEY: env.VITE_LIPANA_SECRET_KEY
+        VITE_LIPANA_SECRET_KEY: env.VITE_LIPANA_SECRET_KEY,
+        VITE_LIPANA_PUBLIC_KEY: env.VITE_LIPANA_PUBLIC_KEY
       }
     }
   };
