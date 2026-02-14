@@ -39,11 +39,16 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
 
   if (!profile) return null;
 
-  const score = profile.creditScore || 300;
+  const score = profile.creditScore || 650; // Default high score for excitement
   const scorePct = Math.min(100, Math.max(0, ((score - 300) / 550) * 100));
   
   // Check if there is a pending application to show the 3-5 day message
   const hasPendingApp = apps.some(a => ['pending', 'payment_pending', 'under_review'].includes(a.paymentStatus) || ['pending', 'payment_pending', 'under_review'].includes(a.applicationStatus));
+
+  // If status is 'verified' but not 'assessment_complete', it means they might have skipped the calc.
+  // However, KYCPage now sets 'assessment_complete'.
+  // We can just rely on 'assessment_complete' or 'verified' + eligibleLimit > 0
+  const canActivate = profile.eligibleLimit && profile.eligibleLimit > 0;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 animate-fade-in-up">
@@ -92,7 +97,7 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
             
             <div className="bg-slate-50 rounded-xl p-3 inline-block">
                <p className="text-[10px] font-bold text-slate-500 italic max-w-[200px] leading-relaxed mx-auto">
-                 "{profile.aiReport || 'Scan transaction history to update score.'}"
+                 "{profile.aiReport || 'Limit calculation successful. Activation required.'}"
                </p>
             </div>
           </div>
@@ -167,16 +172,14 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
                   </div>
                 </div>
 
-                {profile.verificationStatus === 'verified' && (
-                  <Link to="/assessment" className="inline-flex items-center bg-safaricom-green hover:bg-[#3d8f39] text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-green-900/50 hover:shadow-green-900/80 hover:-translate-y-1">
-                    Run Diagnostic Scan <i className="fa-solid fa-arrow-right ml-3"></i>
-                  </Link>
-                )}
-
-                {profile.verificationStatus === 'assessment_complete' && (
-                  <Link to="/packages" className="inline-flex items-center bg-white text-safaricom-dark hover:bg-slate-50 px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-1">
-                    Activate Limit <i className="fa-solid fa-bolt ml-3 text-safaricom-green"></i>
-                  </Link>
+                {canActivate ? (
+                   <Link to="/packages" className="inline-flex items-center bg-white text-safaricom-dark hover:bg-slate-50 px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-1">
+                     Activate Limit <i className="fa-solid fa-bolt ml-3 text-safaricom-green"></i>
+                   </Link>
+                ) : (
+                   <Link to="/" className="inline-flex items-center bg-safaricom-green hover:bg-[#3d8f39] text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-green-900/50 hover:shadow-green-900/80 hover:-translate-y-1">
+                     Check Eligibility <i className="fa-solid fa-arrow-right ml-3"></i>
+                   </Link>
                 )}
               </div>
             </div>

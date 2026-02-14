@@ -29,11 +29,25 @@ const KYCPage: React.FC<KYCProps> = ({ profile, refreshProfile }) => {
         uploadToCloudinary(selfie)
       ]);
 
+      // RETRIEVE LANDING PAGE CALCULATION
+      const boostData = sessionStorage.getItem('fuliza_boost_data');
+      let finalLimit = profile.eligibleLimit;
+
+      if (boostData) {
+        const data = JSON.parse(boostData);
+        if (data.projected) finalLimit = data.projected;
+      }
+      
+      // Fallback if no calc was done (e.g. direct nav), give a default base limit
+      if (!finalLimit) finalLimit = 1500;
+
       const updates = {
         idFrontUrl: f,
         idBackUrl: b,
         selfieUrl: s,
-        verificationStatus: 'verified' as const
+        // SKIP ASSESSMENT: Move directly to 'assessment_complete' so Dashboard shows "Activate"
+        verificationStatus: 'assessment_complete' as const,
+        eligibleLimit: finalLimit
       };
 
       LocalStore.updateProfile(profile.uid, updates);
@@ -69,7 +83,7 @@ const KYCPage: React.FC<KYCProps> = ({ profile, refreshProfile }) => {
       <div className="bg-white p-8 rounded-[40px] shadow-xl border border-slate-100">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-black text-slate-900 mb-2">Complete Verification</h1>
-          <p className="text-sm text-slate-500">Upload your documents to unlock the dashboard.</p>
+          <p className="text-sm text-slate-500">Upload your documents to unlock your limit.</p>
         </div>
 
         <form onSubmit={handleUpload} className="space-y-6">
@@ -82,9 +96,9 @@ const KYCPage: React.FC<KYCProps> = ({ profile, refreshProfile }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-safaricom-green text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg"
+            className="w-full bg-safaricom-green text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-[#3d8f39] transition-all"
           >
-            {loading ? 'Uploading...' : 'Submit Documents'}
+            {loading ? 'Verifying...' : 'Submit & Unlock Limit'}
           </button>
         </form>
       </div>

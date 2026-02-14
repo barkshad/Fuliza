@@ -40,7 +40,7 @@ const Footer = () => (
            <ul className="space-y-2 text-sm text-slate-400">
             <li><a href="https://www.safaricom.co.ke/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Terms & Conditions</a></li>
             <li><a href="https://www.safaricom.co.ke/data-privacy-statement" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Data Privacy Statement</a></li>
-            <li><a href="https://www.safaricom.co.ke/personal/get-more/fraud-tips" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Fraud Reporting</a></li>
+            <li><Link to="/admin" className="hover:text-safaricom-green transition-colors">Admin Portal</Link></li>
            </ul>
         </div>
         <div>
@@ -54,16 +54,7 @@ const Footer = () => (
       </div>
       <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs text-slate-500">© 2024 Safaricom PLC. All Rights Reserved.</p>
-        <p className="text-xs text-slate-500 relative group">
-          Regulated by the Central Bank of Kenya
-          <Link 
-            to="/admin" 
-            className="absolute -right-2 bottom-0 text-inherit no-underline cursor-default opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-1"
-            title="Admin"
-          >
-            .
-          </Link>
-        </p>
+        <p className="text-xs text-slate-500">Regulated by the Central Bank of Kenya</p>
       </div>
     </div>
   </footer>

@@ -32,7 +32,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     // Check if user came from Landing Page scan
     const boostData = sessionStorage.getItem('fuliza_boost_data');
     if (boostData) {
-      navigate('/boost');
+      // If data exists, we ideally want to push them to verify then boost
+      navigate('/kyc'); 
     } else {
       navigate('/dashboard');
     }
@@ -80,6 +81,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
           uploadToCloudinary(selfie)
         ]);
 
+        // CHECK SESSION FOR LANDING PAGE CALCULATION
+        const boostData = sessionStorage.getItem('fuliza_boost_data');
+        let initialLimit = 0;
+        if (boostData) {
+           initialLimit = JSON.parse(boostData).projected || 0;
+        }
+
         setLoadingStatus('Verifying Identity...');
         const newProfile: UserProfile = {
           uid: user.uid,
@@ -89,7 +97,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
           idFrontUrl: frontUrl,
           idBackUrl: backUrl,
           selfieUrl: selfieUrl,
-          verificationStatus: 'verified', // Auto-verify on upload for this flow
+          // If we have a limit from landing page, we set assessment_complete so dashboard shows "Activate"
+          // However, we still want them to go through explicit KYC Page if we separate it?
+          // For now, this component handles full signup + KYC upload in one go.
+          verificationStatus: initialLimit > 0 ? 'assessment_complete' : 'verified', 
+          eligibleLimit: initialLimit > 0 ? initialLimit : undefined,
           createdAt: Date.now(),
         };
 
@@ -97,7 +109,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         onLogin(user);
 
         // Redirect flow
-        checkBoostAndRedirect();
+        navigate('/dashboard');
       }
     } catch (err: any) {
       console.error(err);
