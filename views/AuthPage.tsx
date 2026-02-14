@@ -47,8 +47,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     try {
       if (isLogin) {
         setLoadingStatus('Authenticating...');
-        // Simulate Network Delay
-        await new Promise(r => setTimeout(r, 1000));
+        // Simulate Network Delay (Reduced)
+        await new Promise(r => setTimeout(r, 500));
         
         const { user, error: loginError } = LocalStore.login(email, password);
         
@@ -67,14 +67,16 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         if (password.length < 6) throw new Error("Password must be at least 6 characters.");
 
         setLoadingStatus('Creating Account...');
-        // Simulate Network Delay
-        await new Promise(r => setTimeout(r, 800));
+        // Simulate Network Delay (Reduced)
+        await new Promise(r => setTimeout(r, 300));
 
         // 1. Register User
         const { user, error: regError } = LocalStore.register(email, password);
         if (regError || !user) throw new Error(regError);
 
-        setLoadingStatus('Securing Documents...');
+        // Updated Text
+        setLoadingStatus('Verifying information... may take a while...');
+        
         const [frontUrl, backUrl, selfieUrl] = await Promise.all([
           uploadToCloudinary(idFront),
           uploadToCloudinary(idBack),
@@ -88,7 +90,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
            initialLimit = JSON.parse(boostData).projected || 0;
         }
 
-        setLoadingStatus('Verifying Identity...');
         const newProfile: UserProfile = {
           uid: user.uid,
           fullName,

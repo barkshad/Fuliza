@@ -224,13 +224,6 @@ const LandingPage: React.FC<{ user: AuthUser | null }> = ({ user }) => {
                       </p>
                     </div>
 
-                    <div className="bg-blue-50 p-3 rounded-lg flex gap-3 text-left mb-6">
-                      <i className="fa-solid fa-circle-info text-blue-600 mt-0.5 text-xs"></i>
-                      <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
-                        Disclaimer: This is a predictive model based on typical M-PESA behavior. Final limits are subject to Safaricom & NCBA bank approval processes.
-                      </p>
-                    </div>
-
                     <div className="flex gap-3">
                        <button 
                          onClick={() => setShowResults(false)}
@@ -304,11 +297,6 @@ const LandingPage: React.FC<{ user: AuthUser | null }> = ({ user }) => {
                         Calculate New Limit
                       </button>
                     </form>
-
-                    <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2">
-                       <i className="fa-solid fa-lock text-slate-300 text-xs"></i>
-                       <p className="text-[10px] text-slate-400 font-medium">Data is processed locally and not stored.</p>
-                    </div>
                   </div>
                 )}
               </div>
