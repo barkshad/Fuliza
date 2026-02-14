@@ -31,26 +31,26 @@ const Footer = () => (
         <div>
           <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Services</h4>
           <ul className="space-y-2 text-sm text-slate-400">
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">M-PESA</a></li>
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">Fuliza</a></li>
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">M-Shwari</a></li>
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">KCB M-PESA</a></li>
+            <li><a href="https://www.safaricom.co.ke/personal/m-pesa" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">M-PESA</a></li>
+            <li><a href="https://www.safaricom.co.ke/personal/m-pesa/credit-and-savings/fuliza" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Fuliza</a></li>
+            <li><a href="https://www.safaricom.co.ke/personal/m-pesa/credit-and-savings/m-shwari" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">M-Shwari</a></li>
+            <li><a href="https://www.safaricom.co.ke/personal/m-pesa/credit-and-savings/kcb-m-pesa" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">KCB M-PESA</a></li>
           </ul>
         </div>
         <div>
            <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Legal</h4>
            <ul className="space-y-2 text-sm text-slate-400">
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">Terms & Conditions</a></li>
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">Data Privacy Statement</a></li>
-            <li><a href="#" className="hover:text-safaricom-green transition-colors">Fraud Reporting</a></li>
+            <li><a href="https://www.safaricom.co.ke/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Terms & Conditions</a></li>
+            <li><a href="https://www.safaricom.co.ke/data-privacy-statement" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Data Privacy Statement</a></li>
+            <li><a href="https://www.safaricom.co.ke/personal/get-more/fraud-tips" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Fraud Reporting</a></li>
            </ul>
         </div>
         <div>
           <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Connect</h4>
           <div className="flex gap-4">
-            <a href="#" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-facebook-f text-sm"></i></a>
-            <a href="#" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-twitter text-sm"></i></a>
-            <a href="#" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-youtube text-sm"></i></a>
+            <a href="https://www.facebook.com/SafaricomPLC" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-facebook-f text-sm"></i></a>
+            <a href="https://twitter.com/SafaricomPLC" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-twitter text-sm"></i></a>
+            <a href="https://www.youtube.com/user/SafaricomLtd" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-safaricom-green transition-colors"><i className="fa-brands fa-youtube text-sm"></i></a>
           </div>
         </div>
       </div>

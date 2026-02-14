@@ -133,7 +133,7 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
     }, 3000);
   };
 
-  const handleSelect = async (plan: Plan) => {
+  const handleUpgrade = async (plan: Plan) => {
     if (!profile) return;
     
     setSelectedId(plan.id);
@@ -141,13 +141,14 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
 
     try {
       // Initiate STK Push
+      // Using the direct STK push method as requested
       await LipanaService.initiateSTKPush(
         profile.phone,
         plan.fee,
         `FULIZA_${Date.now()}`
       );
       
-      // Move to waiting state
+      // Move to waiting state to prompt user to check phone
       setPaymentStatus('waiting');
       setCountDown(15);
       
@@ -174,7 +175,7 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
                     <i className="fa-solid fa-circle-notch animate-spin text-2xl text-safaricom-green"></i>
                  </div>
                  <h3 className="text-xl font-black text-slate-900 mb-2">Initiating Request</h3>
-                 <p className="text-sm text-slate-500">Securely connecting to M-PESA...</p>
+                 <p className="text-sm text-slate-500">Sending M-Pesa prompt...</p>
                </>
              )}
 
@@ -222,7 +223,7 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
                    <button onClick={() => setPaymentStatus('idle')} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs uppercase">
                      Cancel
                    </button>
-                   <button onClick={() => handleSelect(plans.find(p => p.id === selectedId)!)} className="flex-1 py-3 rounded-xl bg-safaricom-green text-white font-bold text-xs uppercase">
+                   <button onClick={() => handleUpgrade(plans.find(p => p.id === selectedId)!)} className="flex-1 py-3 rounded-xl bg-safaricom-green text-white font-bold text-xs uppercase">
                      Retry
                    </button>
                  </div>
@@ -271,7 +272,7 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
           {plans.map((plan, index) => (
             <div 
               key={plan.id}
-              onClick={() => handleSelect(plan)}
+              onClick={() => handleUpgrade(plan)}
               className={`
                 bg-white border rounded-[32px] p-5 flex items-center justify-between shadow-sm hover:shadow-lg transition-all cursor-pointer active:scale-95 duration-300
                 ${selectedId === plan.id ? 'border-safaricom-green bg-green-50 ring-2 ring-safaricom-green/20' : `${plan.borderColor} hover:border-safaricom-green/30`}
@@ -282,7 +283,11 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
               <div className="flex items-center gap-4">
                 {/* Icon */}
                 <div className={`w-14 h-14 ${plan.iconBg} ${plan.iconColor} rounded-[20px] flex items-center justify-center text-xl font-bold shadow-inner shrink-0`}>
-                   {plan.icon}
+                  {selectedId === plan.id && paymentStatus === 'processing' ? (
+                    <i className="fa-solid fa-circle-notch animate-spin"></i>
+                  ) : (
+                    plan.icon
+                  )}
                 </div>
                 
                 {/* Details */}

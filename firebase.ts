@@ -1,10 +1,9 @@
-
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB9H1Q9eJuIXznRs8C-27CLNbUVKGuCpQY",
+  apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY,
   authDomain: "fuliza-1be02.firebaseapp.com",
   projectId: "fuliza-1be02",
   storageBucket: "fuliza-1be02.firebasestorage.app",
