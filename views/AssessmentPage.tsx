@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile } from '../types';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { LocalStore } from '../services/localStore';
 
 const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
@@ -21,14 +21,12 @@ const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) 
     setIsAnalyzing(true);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const prompt = `
         Analyze credit risk for an M-Pesa user:
         - Monthly Income: KES ${income}
         - Business: ${bizType}
         - Years Active: ${years}
-        
-        Return JSON: { "score": number (300-850), "limit": number (max 50000), "reason": "short string" }
       `;
 
       let data;
@@ -36,7 +34,18 @@ const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) 
         const resp = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
           contents: prompt,
-          config: { responseMimeType: 'application/json' }
+          config: { 
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                score: { type: Type.NUMBER },
+                limit: { type: Type.NUMBER },
+                reason: { type: Type.STRING },
+              },
+              required: ["score", "limit", "reason"],
+            }
+          }
         });
         data = JSON.parse(resp.text || '{}');
       } catch (aiErr) {
