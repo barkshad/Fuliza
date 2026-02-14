@@ -13,9 +13,8 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     // Simple protection check
-    // In a real app, use proper auth. For this demo, a simple prompt suffices.
     const password = window.prompt("Enter Admin Password:");
-    if (password === "admin123") {
+    if (password === "12345678") {
       setAuthorized(true);
       const allUsers = LocalStore.getAllProfiles();
       setUsers(allUsers.sort((a, b) => b.createdAt - a.createdAt));
