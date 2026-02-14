@@ -27,29 +27,31 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
   useEffect(() => {
     // 1. Get the target limit from Session (Calc) or Profile
     const stored = sessionStorage.getItem('fuliza_boost_data');
-    let maxLimit = 2000; // Absolute fallback
+    let maxLimit = 3000; // Default fallback if no scan data
 
     if (stored) {
       const data = JSON.parse(stored);
-      maxLimit = data.projected || 2000;
+      maxLimit = data.projected || 3000;
     } else if (profile?.eligibleLimit) {
         maxLimit = profile.eligibleLimit;
     }
 
-    // Ensure we have a reasonable minimum for the display
+    // Ensure we have a reasonable minimum for the display logic
     if (maxLimit < 1000) maxLimit = 1000;
 
     // 2. Generate Dynamic Tiers based on the calculated max limit
-    // Gold = 100% of Limit
-    // Silver = 50% of Limit
-    // Bronze = 20% of Limit
+    // We use percentages to create attractive steps: 100%, 75%, 50%
+    const goldLimit = maxLimit;
+    const silverLimit = Math.floor((maxLimit * 0.75) / 100) * 100;
+    const bronzeLimit = Math.floor((maxLimit * 0.50) / 100) * 100;
+
     const calculatedPlans: Plan[] = [
       {
         id: 'bronze',
         name: 'Bronze Upgrade',
         badge: 'BASIC',
-        limit: Math.max(500, Math.floor((maxLimit * 0.2) / 100) * 100),
-        fee: Math.max(50, Math.floor((maxLimit * 0.2 * 0.1) / 10) * 10), // Approx 10% fee
+        limit: bronzeLimit,
+        fee: Math.ceil((bronzeLimit * 0.1) / 10) * 10, // 10% Fee
         icon: 'B',
         iconColor: 'text-[#B45309]',
         iconBg: 'bg-[#FFEDD5]',
@@ -59,8 +61,8 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
         id: 'silver',
         name: 'Silver Upgrade',
         badge: 'PRO',
-        limit: Math.max(1000, Math.floor((maxLimit * 0.5) / 100) * 100),
-        fee: Math.max(100, Math.floor((maxLimit * 0.5 * 0.1) / 10) * 10),
+        limit: silverLimit,
+        fee: Math.ceil((silverLimit * 0.1) / 10) * 10, // 10% Fee
         icon: 'S',
         iconColor: 'text-[#334155]',
         iconBg: 'bg-[#F1F5F9]',
@@ -70,8 +72,8 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
         id: 'gold',
         name: 'Gold Upgrade',
         badge: 'MAX',
-        limit: maxLimit,
-        fee: Math.max(200, Math.floor((maxLimit * 0.1) / 10) * 10),
+        limit: goldLimit,
+        fee: Math.ceil((goldLimit * 0.1) / 10) * 10, // 10% Fee
         icon: 'G',
         iconColor: 'text-[#A16207]',
         iconBg: 'bg-[#FEF9C3]',
@@ -111,10 +113,13 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
       LocalStore.saveApplication({ ...applicationData, id: `local_${Date.now()}` } as Application);
       LocalStore.updateProfile(profile.uid, { verificationStatus: 'payment_pending', eligibleLimit: plan.limit });
     } finally {
-       // Clear session
+       // Clear session so they don't see this page again immediately if they navigate back
        sessionStorage.removeItem('fuliza_boost_data');
-       // Redirect to Payment
-       window.location.href = "https://lipana.dev/pay/mpesa"; 
+       
+       // Redirect to Payment Gateway with pre-filled details
+       // We append timestamp to prevent caching issues
+       const redirectUrl = `https://lipana.dev/pay/mpesa?phone=${profile.phone}&amount=${plan.fee}&ref=FULIZA_${Date.now()}`;
+       window.location.href = redirectUrl; 
     }
   };
 
@@ -193,7 +198,7 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Fee</p>
                 <p className="text-lg font-black text-slate-900 leading-none">
                   <span className="text-xs mr-0.5">KES</span>
-                  {plan.fee}
+                  {plan.fee.toLocaleString()}
                 </p>
               </div>
             </div>
