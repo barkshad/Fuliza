@@ -1,7 +1,49 @@
 
-import { UserProfile, Application } from '../types';
+import { UserProfile, Application, AuthUser } from '../types';
 
 export const LocalStore = {
+  // Auth & Session
+  login: (email: string, password: string): { user: AuthUser | null, error?: string } => {
+    // Mock Auth DB: Check if email exists in our local store map
+    const authDb = JSON.parse(localStorage.getItem('fuliza_auth_db') || '{}');
+    const creds = authDb[email];
+    
+    if (creds && creds.password === password) {
+       const user = { uid: creds.uid, email, displayName: null };
+       LocalStore.createSession(user);
+       return { user };
+    }
+    return { user: null, error: 'Invalid credentials' };
+  },
+
+  register: (email: string, password: string): { user: AuthUser, error?: string } => {
+    const authDb = JSON.parse(localStorage.getItem('fuliza_auth_db') || '{}');
+    if (authDb[email]) {
+        return { user: null as any, error: 'User already exists' };
+    }
+    const uid = 'user_' + Date.now().toString(36);
+    authDb[email] = { uid, password };
+    localStorage.setItem('fuliza_auth_db', JSON.stringify(authDb));
+    
+    const user = { uid, email, displayName: null };
+    LocalStore.createSession(user);
+    return { user };
+  },
+
+  createSession: (user: AuthUser) => {
+    localStorage.setItem('fuliza_current_session', JSON.stringify(user));
+  },
+
+  getCurrentUser: (): AuthUser | null => {
+    const s = localStorage.getItem('fuliza_current_session');
+    return s ? JSON.parse(s) : null;
+  },
+
+  logout: () => {
+    localStorage.removeItem('fuliza_current_session');
+  },
+
+  // Profile
   saveProfile: (profile: UserProfile) => {
     try {
       localStorage.setItem(`fuliza_profile_${profile.uid}`, JSON.stringify(profile));
@@ -33,6 +75,7 @@ export const LocalStore = {
     return null;
   },
 
+  // Applications
   saveApplication: (app: Application) => {
     try {
       const key = `fuliza_apps_${app.userId}`;

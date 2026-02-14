@@ -9,8 +9,8 @@ export const LipanaService = {
    */
   initiateSTKPush: async (phone: string, amount: number, reference: string) => {
     const url = `${BASE_URL}/transactions/push-stk`;
-    // Cast import.meta to any to avoid TS error "Property 'env' does not exist on type 'ImportMeta'"
-    const apiKey = (import.meta as any).env.VITE_LIPANA_SECRET_KEY;
+    // Access directly for Vite replacement with safe fallback
+    const apiKey = (import.meta && import.meta.env && import.meta.env.VITE_LIPANA_SECRET_KEY) || process.env.VITE_LIPANA_SECRET_KEY;
 
     if (!apiKey) {
       console.error("Lipana Secret Key is missing. Please check VITE_LIPANA_SECRET_KEY.");

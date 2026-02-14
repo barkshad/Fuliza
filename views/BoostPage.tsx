@@ -1,8 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { UserProfile, Application } from '../types';
 import { LocalStore } from '../services/localStore';
 import { LipanaService } from '../services/lipanaService';
@@ -19,7 +17,12 @@ interface Plan {
   borderColor: string;
 }
 
-const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
+interface BoostProps {
+  profile: UserProfile | null;
+  refreshProfile: () => void;
+}
+
+const BoostPage: React.FC<BoostProps> = ({ profile, refreshProfile }) => {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -106,7 +109,8 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
     if (!plan) return;
 
     // Finalize DB updates
-    const applicationData: any = {
+    const applicationData: Application = {
+      id: `app_${Date.now()}`,
       userId: profile.uid,
       selectedPackage: plan.name,
       requestedLimit: plan.limit,
@@ -116,17 +120,13 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
       createdAt: Date.now()
     };
 
-    try {
-      await addDoc(collection(db, 'applications'), applicationData);
-      await updateDoc(doc(db, 'users', profile.uid), { 
-        verificationStatus: 'under_review',
-        eligibleLimit: plan.limit 
-      });
-    } catch (e) {
-      console.warn("DB offline, saving local");
-      LocalStore.saveApplication({ ...applicationData, id: `local_${Date.now()}` } as Application);
-      LocalStore.updateProfile(profile.uid, { verificationStatus: 'under_review' });
-    }
+    LocalStore.saveApplication(applicationData);
+    LocalStore.updateProfile(profile.uid, { 
+      verificationStatus: 'under_review',
+      eligibleLimit: plan.limit 
+    });
+    
+    refreshProfile();
 
     setTimeout(() => {
       navigate('/dashboard');
@@ -141,7 +141,6 @@ const BoostPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
 
     try {
       // Initiate STK Push
-      // Using the direct STK push method as requested
       await LipanaService.initiateSTKPush(
         profile.phone,
         plan.fee,

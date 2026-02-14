@@ -1,13 +1,16 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { UserProfile } from '../types';
 import { uploadToCloudinary } from '../services/cloudinaryService';
 import { LocalStore } from '../services/localStore';
 
-const KYCPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
+interface KYCProps {
+  profile: UserProfile | null;
+  refreshProfile: () => void;
+}
+
+const KYCPage: React.FC<KYCProps> = ({ profile, refreshProfile }) => {
   const navigate = useNavigate();
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
@@ -33,12 +36,8 @@ const KYCPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
         verificationStatus: 'verified' as const
       };
 
-      try {
-        await updateDoc(doc(db, 'users', profile.uid), updates);
-      } catch (dbErr) {
-        console.warn("Firestore update failed, saving locally");
-        LocalStore.updateProfile(profile.uid, updates);
-      }
+      LocalStore.updateProfile(profile.uid, updates);
+      refreshProfile();
       
       navigate('/dashboard');
     } catch (e) {

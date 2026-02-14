@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
-import { UserProfile, UserStatus, Application } from '../types';
+import { UserProfile, Application } from '../types';
 import { LocalStore } from '../services/localStore';
 
 const Badge: React.FC<{ status: string }> = ({ status }) => {
@@ -34,28 +32,8 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
         navigate('/kyc');
       }
       
-      // Load local apps first for immediate render
       const localApps = LocalStore.getApplications(profile.uid);
-      setApps(localApps);
-
-      const q = query(collection(db, 'applications'), where('userId', '==', profile.uid));
-      const unsub = onSnapshot(q, (snap) => {
-        const dbApps = snap.docs.map(d => ({ id: d.id, ...d.data() } as Application));
-        
-        // Merge apps (DB takes precedence, but we include local-only apps)
-        const mergedApps = [...dbApps];
-        localApps.forEach(localApp => {
-           if (!mergedApps.some(dbApp => dbApp.id === localApp.id)) {
-             mergedApps.push(localApp);
-           }
-        });
-
-        setApps(mergedApps.sort((a, b) => b.createdAt - a.createdAt));
-      }, (error) => {
-        console.warn("Firestore error, showing local apps", error);
-        // On error, just stick with local apps (already set)
-      });
-      return () => unsub();
+      setApps(localApps.sort((a, b) => b.createdAt - a.createdAt));
     }
   }, [profile, navigate]);
 
@@ -65,7 +43,7 @@ const Dashboard: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
   const scorePct = Math.min(100, Math.max(0, ((score - 300) / 550) * 100));
   
   // Check if there is a pending application to show the 3-5 day message
-  const hasPendingApp = apps.some(a => ['pending', 'payment_pending'].includes(a.paymentStatus) || ['pending', 'payment_pending'].includes(a.applicationStatus));
+  const hasPendingApp = apps.some(a => ['pending', 'payment_pending', 'under_review'].includes(a.paymentStatus) || ['pending', 'payment_pending', 'under_review'].includes(a.applicationStatus));
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 animate-fade-in-up">

@@ -8,6 +8,12 @@ export type UserStatus =
   | 'approved' 
   | 'declined';
 
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+}
+
 export interface UserProfile {
   uid: string;
   fullName: string;

@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { UserProfile } from '../types';
+import { UserProfile, AuthUser } from '../types';
 import { uploadToCloudinary } from '../services/cloudinaryService';
 import { LocalStore } from '../services/localStore';
 
-const AuthPage: React.FC = () => {
+interface AuthPageProps {
+  onLogin: (user: AuthUser) => void;
+}
+
+const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(false);
   
@@ -45,9 +46,18 @@ const AuthPage: React.FC = () => {
     try {
       if (isLogin) {
         setLoadingStatus('Authenticating...');
-        await signInWithEmailAndPassword(auth, email, password);
-        // Auth listener usually handles redirects, but let's be explicit
+        // Simulate Network Delay
+        await new Promise(r => setTimeout(r, 1000));
+        
+        const { user, error: loginError } = LocalStore.login(email, password);
+        
+        if (loginError || !user) {
+          throw new Error(loginError || "Login failed");
+        }
+        
+        onLogin(user);
         checkBoostAndRedirect();
+
       } else {
         // Sign Up Validation
         if (!idFront || !idBack || !selfie) {
@@ -56,8 +66,12 @@ const AuthPage: React.FC = () => {
         if (password.length < 6) throw new Error("Password must be at least 6 characters.");
 
         setLoadingStatus('Creating Account...');
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const { user } = userCredential;
+        // Simulate Network Delay
+        await new Promise(r => setTimeout(r, 800));
+
+        // 1. Register User
+        const { user, error: regError } = LocalStore.register(email, password);
+        if (regError || !user) throw new Error(regError);
 
         setLoadingStatus('Securing Documents...');
         const [frontUrl, backUrl, selfieUrl] = await Promise.all([
@@ -79,12 +93,8 @@ const AuthPage: React.FC = () => {
           createdAt: Date.now(),
         };
 
-        try {
-          await setDoc(doc(db, 'users', user.uid), newProfile);
-        } catch (dbErr) {
-          console.warn("Database unavailable, saving locally.");
-          LocalStore.saveProfile(newProfile);
-        }
+        LocalStore.saveProfile(newProfile);
+        onLogin(user);
 
         // Redirect flow
         checkBoostAndRedirect();

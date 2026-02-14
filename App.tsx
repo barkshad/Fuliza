@@ -1,10 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from './firebase';
-import { UserProfile } from './types';
+import { UserProfile, AuthUser } from './types';
 import { LocalStore } from './services/localStore';
 
 // Views
@@ -63,39 +60,42 @@ const Footer = () => (
 );
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Initial Session Check
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const unsubDoc = onSnapshot(doc(db, 'users', currentUser.uid), (doc) => {
-          if (doc.exists()) {
-            setProfile(doc.data() as UserProfile);
-          } else {
-            // Fallback to local store if Firestore fails/is slow
-            const local = LocalStore.getProfile(currentUser.uid);
-            if (local) setProfile(local);
-          }
-          setLoading(false);
-        }, (error) => {
-           console.warn("Firestore sync error", error);
-           const local = LocalStore.getProfile(currentUser.uid);
-           if (local) setProfile(local);
-           setLoading(false);
-        });
-        return () => unsubDoc();
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
+    const sessionUser = LocalStore.getCurrentUser();
+    if (sessionUser) {
+      setUser(sessionUser);
+      const userProfile = LocalStore.getProfile(sessionUser.uid);
+      if (userProfile) setProfile(userProfile);
+    }
+    setLoading(false);
   }, []);
+
+  // Poll for profile updates or re-fetches when user changes
+  useEffect(() => {
+    if (user) {
+       const userProfile = LocalStore.getProfile(user.uid);
+       setProfile(userProfile);
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
+
+  const handleLogout = () => {
+    LocalStore.logout();
+    setUser(null);
+    setProfile(null);
+  };
+
+  const handleLogin = (u: AuthUser) => {
+    setUser(u);
+    const p = LocalStore.getProfile(u.uid);
+    setProfile(p);
+  };
 
   if (loading) {
     return (
@@ -108,15 +108,20 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen flex flex-col font-sans text-slate-900 bg-white">
+        {user && (
+           <div className="bg-safaricom-dark text-white px-4 py-2 text-xs flex justify-end">
+              <button onClick={handleLogout} className="hover:text-safaricom-green font-bold">LOGOUT <i className="fa-solid fa-sign-out-alt ml-1"></i></button>
+           </div>
+        )}
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<LandingPage user={user} />} />
-            <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/dashboard" />} />
-            <Route path="/kyc" element={user ? <KYCPage profile={profile} /> : <Navigate to="/auth" />} />
+            <Route path="/auth" element={!user ? <AuthPage onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
+            <Route path="/kyc" element={user ? <KYCPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
             <Route path="/dashboard" element={user ? <Dashboard profile={profile} /> : <Navigate to="/auth" />} />
-            <Route path="/assessment" element={user ? <AssessmentPage profile={profile} /> : <Navigate to="/auth" />} />
-            <Route path="/packages" element={user ? <PackagesPage profile={profile} /> : <Navigate to="/auth" />} />
-            <Route path="/boost" element={user ? <BoostPage profile={profile} /> : <Navigate to="/auth" />} />
+            <Route path="/assessment" element={user ? <AssessmentPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
+            <Route path="/packages" element={user ? <PackagesPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
+            <Route path="/boost" element={user ? <BoostPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
           </Routes>
         </main>
         <Footer />

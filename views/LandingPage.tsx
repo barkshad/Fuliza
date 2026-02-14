@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User } from 'firebase/auth';
+import { AuthUser } from '../types';
 
-const LandingPage: React.FC<{ user: User | null }> = ({ user }) => {
+const LandingPage: React.FC<{ user: AuthUser | null }> = ({ user }) => {
   const navigate = useNavigate();
   
   // Inputs

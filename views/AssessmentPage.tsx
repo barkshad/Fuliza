@@ -1,13 +1,16 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { UserProfile } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 import { LocalStore } from '../services/localStore';
 
-const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) => {
+interface AssessmentProps {
+  profile: UserProfile | null;
+  refreshProfile: () => void;
+}
+
+const AssessmentPage: React.FC<AssessmentProps> = ({ profile, refreshProfile }) => {
   const navigate = useNavigate();
   const [income, setIncome] = useState(0);
   const [bizType, setBizType] = useState('');
@@ -32,7 +35,7 @@ const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) 
       let data;
       try {
         const resp = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
+          model: 'gemini-2.0-flash',
           contents: prompt,
           config: { 
             responseMimeType: 'application/json',
@@ -64,13 +67,9 @@ const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) 
       };
 
       // Simulate "Thinking" delay for UX
-      setTimeout(async () => {
-        try {
-          await updateDoc(doc(db, 'users', profile.uid), updates);
-        } catch (dbErr) {
-          console.warn("Firestore unavailable, saving locally");
-          LocalStore.updateProfile(profile.uid, updates);
-        }
+      setTimeout(() => {
+        LocalStore.updateProfile(profile.uid, updates);
+        refreshProfile();
         navigate('/dashboard');
       }, 3000);
 
@@ -83,11 +82,8 @@ const AssessmentPage: React.FC<{ profile: UserProfile | null }> = ({ profile }) 
          verificationStatus: 'assessment_complete' as const
       };
       
-      try {
-        await updateDoc(doc(db, 'users', profile.uid), updates);
-      } catch (dbErr) {
-        LocalStore.updateProfile(profile.uid, updates);
-      }
+      LocalStore.updateProfile(profile.uid, updates);
+      refreshProfile();
       navigate('/dashboard');
     }
   };
