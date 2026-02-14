@@ -11,7 +11,8 @@ import KYCPage from './views/KYCPage';
 import Dashboard from './views/Dashboard';
 import AssessmentPage from './views/AssessmentPage';
 import PackagesPage from './views/PackagesPage';
-import BoostPage from './views/BoostPage'; // Import the BoostPage component
+import BoostPage from './views/BoostPage'; 
+import AdminPage from './views/AdminPage'; // New Admin View
 
 // Footer Component
 const Footer = () => (
@@ -53,7 +54,10 @@ const Footer = () => (
       </div>
       <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs text-slate-500">© 2024 Safaricom PLC. All Rights Reserved.</p>
-        <p className="text-xs text-slate-500">Regulated by the Central Bank of Kenya.</p>
+        <p className="text-xs text-slate-500">
+          Regulated by the Central Bank of Kenya
+          <Link to="/admin" className="text-inherit no-underline hover:text-inherit cursor-default opacity-50 hover:opacity-100">.</Link>
+        </p>
       </div>
     </div>
   </footer>
@@ -122,6 +126,7 @@ const App: React.FC = () => {
             <Route path="/assessment" element={user ? <AssessmentPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
             <Route path="/packages" element={user ? <PackagesPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
             <Route path="/boost" element={user ? <BoostPage profile={profile} refreshProfile={() => setProfile(LocalStore.getProfile(user.uid))} /> : <Navigate to="/auth" />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>
         <Footer />

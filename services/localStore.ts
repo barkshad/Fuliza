@@ -61,6 +61,24 @@ export const LocalStore = {
     }
   },
 
+  getAllProfiles: (): UserProfile[] => {
+    const profiles: UserProfile[] = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('fuliza_profile_')) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            profiles.push(JSON.parse(data));
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch all profiles", e);
+    }
+    return profiles;
+  },
+
   updateProfile: (uid: string, updates: Partial<UserProfile>) => {
     try {
       const current = LocalStore.getProfile(uid);
