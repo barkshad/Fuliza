@@ -40,7 +40,6 @@ const Footer = () => (
            <ul className="space-y-2 text-sm text-slate-400">
             <li><a href="https://www.safaricom.co.ke/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Terms & Conditions</a></li>
             <li><a href="https://www.safaricom.co.ke/data-privacy-statement" target="_blank" rel="noopener noreferrer" className="hover:text-safaricom-green transition-colors">Data Privacy Statement</a></li>
-            <li><Link to="/admin" className="hover:text-safaricom-green transition-colors">Admin Portal</Link></li>
            </ul>
         </div>
         <div>
@@ -54,7 +53,12 @@ const Footer = () => (
       </div>
       <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs text-slate-500">© 2024 Safaricom PLC. All Rights Reserved.</p>
-        <p className="text-xs text-slate-500">Regulated by the Central Bank of Kenya</p>
+        <div className="flex items-center gap-6">
+          <p className="text-xs text-slate-500">Regulated by the Central Bank of Kenya</p>
+          <Link to="/admin" className="text-[10px] font-bold text-slate-600 hover:text-safaricom-green uppercase tracking-widest transition-colors flex items-center gap-1">
+            <i className="fa-solid fa-lock"></i> Admin Panel
+          </Link>
+        </div>
       </div>
     </div>
   </footer>
