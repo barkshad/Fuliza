@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { UserProfile, AuthUser } from './types';
 import { LocalStore } from './services/localStore';
 
@@ -131,6 +132,7 @@ const App: React.FC = () => {
           </Routes>
         </main>
         <Footer />
+        <Analytics />
       </div>
     </Router>
   );
